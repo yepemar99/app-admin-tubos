@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <style>
+      /* Configuración para impresión PDF */
+      @page {
+        size: A4;
+        margin: 1cm;
+      }
+
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        color: #000080; /* Azul oscuro estilo Access */
+        line-height: 1.4;
+        padding-left: 10px;
+        padding-right: 10px;
+      }
+
+      /* Encabezado */
+      .header {
+        text-align: center;
+        margin-bottom: 30px;
+      }
+
+      .header h1 {
+        font-style: italic;
+        font-size: 28px;
+        margin-bottom: 5px;
+      }
+
+      /* Tabla de datos */
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 10px;
+      }
+
+      th {
+        border-top: 2px solid #000080;
+        border-bottom: 2px solid #000080;
+        padding: 8px 0;
+        font-style: italic;
+      }
+
+      td {
+        padding: 8px 0;
+      }
+
+      /* Alineaciones */
+      .text-right {
+        text-align: right;
+      }
+      .text-left {
+        text-align: left;
+      }
+      .text-center {
+        text-align: center;
+      }
+
+      /* Gran Total */
+      .grand-total {
+        margin-top: 40px;
+        border-top: 2px dashed #000080;
+        border-bottom: 2px dashed #000080;
+        padding: 10px 0;
+        display: flex;
+        justify-content: space-between;
+        font-weight: bold;
+        font-style: italic;
+      }
+
+      .grand-total-values {
+        display: flex;
+        gap: 40px; /* Espacio entre los valores del total */
+      }
+
+      /* Pie de página */
+      .footer {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 30px;
+        display: flex;
+        justify-content: space-between;
+        font-size: 12px;
+        font-style: italic;
+        border-top: 1px solid #ccc;
+        padding-top: 5px;
+        background-color: white;
+      }
+
+      .footer-spacer {
+        height: 40px;
+      }
+
+      tr {
+        page-break-inside: avoid;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <h1>{titulo}</h1>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th class="text-left" style="width: 40%">Concepto</th>
+          <th class="text-center" style="width: 20%">Calidad</th>
+          <th class="text-right" style="width: 20%">Unidades</th>
+          <th class="text-right" style="width: 20%">Peso (Tn)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="text-left">Producto Ejemplo A</td>
+          <td class="text-center">Primera</td>
+          <td class="text-right">2</td>
+          <td class="text-right">8.50 Tn</td>
+        </tr>
+        <tr>
+          <td class="text-left">Producto Ejemplo B</td>
+          <td class="text-center">Segunda</td>
+          <td class="text-right">2</td>
+          <td class="text-right">9.15 Tn</td>
+        </tr>
+      </tbody>
+      <tfoot>
+        <tr>
+          <td colspan="4">
+            <div class="footer-spacer"></div>
+          </td>
+        </tr>
+      </tfoot>
+    </table>
+
+    <div class="grand-total">
+      <span>{resumenTitulo}</span>
+      <div class="grand-total-values">
+        <span>4</span>
+        <span>17.65 Tn</span>
+      </div>
+    </div>
+
+    <div class="footer">
+      <span id="fecha-footer">martes, 21 de abril de 2026</span>
+      <span>Página 1 de 1</span>
+    </div>
+  </body>
+</html>

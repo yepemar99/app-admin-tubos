@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <style>
+      /* Configuración para impresión PDF */
+      @page {
+        size: A4;
+        margin: 1cm;
+      }
+
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        color: #000080; /* Azul oscuro como el de Access */
+        line-height: 1.4;
+        padding-left: 10px;
+        padding-right: 10px;
+      }
+
+      /* Encabezado */
+      .header {
+        text-align: center;
+        margin-bottom: 30px;
+      }
+
+      .header h1 {
+        font-style: italic;
+        font-size: 28px;
+        border-bottom: none;
+        margin-bottom: 5px;
+      }
+
+      /* Sección de Familia */
+      .familia-section {
+        margin-bottom: 10px;
+        font-weight: bold;
+        font-style: italic;
+        display: flex;
+        gap: 20px;
+      }
+
+      /* Tabla de datos */
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 10px;
+      }
+
+      th {
+        border-top: 2px solid #000080;
+        border-bottom: 2px solid #000080;
+        padding: 5px 0;
+        font-style: italic;
+      }
+
+      td {
+        padding: 8px 0;
+      }
+
+      .text-right {
+        text-align: right;
+      }
+      .text-left {
+        text-align: left;
+      }
+      .text-center {
+        text-align: center;
+      }
+
+      /* Línea de Subtotales (Caja con #Type! en tu imagen) */
+      .subtotal-box {
+        border: 1.5px solid #000080;
+        margin-left: 15%;
+        padding: 5px 10px;
+        display: flex;
+        justify-content: space-between;
+        font-weight: bold;
+      }
+
+      /* Gran Total (Línea discontinua) */
+      .grand-total {
+        margin-top: 40px;
+        border-top: 2px dashed #000080;
+        border-bottom: 2px dashed #000080;
+        padding: 10px 0;
+        display: flex;
+        justify-content: space-between;
+        font-weight: bold;
+        font-style: italic;
+      }
+
+      /* Pie de página */
+      .footer {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 30px; /* Altura fija para el footer */
+        display: flex;
+        justify-content: space-between;
+        font-size: 12px;
+        font-style: italic;
+        border-top: 1px solid #ccc; /* Opcional: línea divisoria */
+        padding-top: 5px;
+        background-color: white;
+      }
+
+      /* Espaciador para que el contenido no pise el footer */
+      .footer-spacer {
+        height: 40px;
+      }
+
+      /* Aseguramos que la tabla no se corte feo entre páginas */
+      tr {
+        page-break-inside: avoid;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <h1>{titulo}</h1>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th class="text-left">Concepto</th>
+          <th class="text-right">Unidades</th>
+          <th class="text-right">Peso (Tn)</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+      <tfoot>
+        <tr>
+          <td colspan="3">
+            <div class="footer-spacer"></div>
+          </td>
+        </tr>
+      </tfoot>
+    </table>
+
+    <div class="grand-total">
+      <span>{resumenTitulo}</span>
+      <div style="display: flex; gap: 50px">
+        <span id="total-unidades">4</span>
+        <span id="total-peso">17.65 Tn</span>
+      </div>
+    </div>
+
+    <div class="footer">
+      <span id="fecha-footer">domingo, 23 de abril de 2026</span>
+      <span>Página 1 de 1</span>
+    </div>
+  </body>
+</html>
