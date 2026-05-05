@@ -52,6 +52,22 @@ export const getImagePath = (image = '') => {
   return `file://${path.replace(/\\/g, '/')}`;
 };
 
+export const formatearFechaCorta = (fecha) => {
+  if (!fecha) return '';
+
+  const date = fecha instanceof Date ? fecha : new Date(fecha);
+  if (Number.isNaN(date.getTime())) return '';
+
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    timeZone: 'UTC',
+  })
+    .format(date)
+    .toLowerCase();
+};
+
 export const resolveSortParams = (model = [], sortFieldMap) => {
   const currentSort = model[0];
   const safeField = currentSort?.field || 'creado';

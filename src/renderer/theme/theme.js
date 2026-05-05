@@ -28,12 +28,14 @@ import Badge from './components/data-display/Badge';
 import Chip from './components/data-display/Chip';
 import DataGrid from './components/data-grid/DataGrid';
 import PaginationItem from './components/pagination/PaginationItem';
+import Card from './components/cards/Card';
 
 export const theme = createTheme({
   typography,
   palette,
   customShadows,
   components: {
+    MuiCard: Card,
     MuiStack: Stack,
     MuiDrawer: Drawer,
     MuiLink: Link,

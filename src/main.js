@@ -19,6 +19,7 @@ const {
 } = require('./server/routes/salidasPaqs.route');
 const { default: operariosRoutes } = require('./server/routes/operarios.route');
 const { default: actionsRoute } = require('./server/routes/actions.route');
+const { default: statsRoutes } = require('./server/routes/stats.route');
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 // eslint-disable-next-line global-require
@@ -71,6 +72,7 @@ app.on('ready', async () => {
   fabricantesRoutes();
   flejesRoutes();
   planesRoutes();
+  statsRoutes();
 });
 
 // Quit when all windows are closed, except on macOS. There, it's common

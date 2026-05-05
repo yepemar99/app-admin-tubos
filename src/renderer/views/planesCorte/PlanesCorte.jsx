@@ -1,23 +1,23 @@
-import React, { useState } from "react";
-import useDataTable from "../../hooks/useDataTable";
-import { Box, Button, Typography } from "@mui/material";
-import LoadingModal from "../../components/common/LoadingModal";
-import { flex } from "../../utils/styles";
-import ViewHeaderLayout from "../../layouts/ViewHeaderLayout";
-import { Add } from "@mui/icons-material";
-import PlanesCorteTable from "./components/Table";
-import PlanCorteModal from "./components/Modal";
-import { PAGE_SIZE } from "../../../utils/constants";
-import Modal from "../../components/common/Modal";
-import { toast } from "react-toastify";
-import PlanCorteModalStats from "./components/ModalStats";
+import React, { useState } from 'react';
+import useDataTable from '../../hooks/useDataTable';
+import { Box, Button, Typography } from '@mui/material';
+import LoadingModal from '../../components/common/LoadingModal';
+import { flex } from '../../utils/styles';
+import ViewHeaderLayout from '../../layouts/ViewHeaderLayout';
+import { Add } from '@mui/icons-material';
+import PlanesCorteTable from './components/Table';
+import PlanCorteModal from './components/Modal';
+import { PAGE_SIZE } from '../../../utils/constants';
+import Modal from '../../components/common/Modal';
+import { toast } from 'react-toastify';
+import PlanCorteModalStats from './components/ModalStats';
+import DataFilters from '../../components/common/DataFilters';
+import { initFilters } from './init';
 
 const PlanesCorteCrud = () => {
   const [preLoading, setPreLoading] = useState(false);
   // Forumulario de stats
   const [openStats, setOpenStats] = useState(false);
-
-
 
   const handleConfirm = async (data) => {
     return await window.api.planes.create(data);
@@ -32,7 +32,7 @@ const PlanesCorteCrud = () => {
       setPreLoading(true);
       const result = await window.api.planes.getFlejesPorCortes(row.id);
       if (result?.data.length > 0) {
-        console.log("Flejes del plan de corte:", result.data);
+        console.log('Flejes del plan de corte:', result.data);
         handleEdit({
           ...row,
           flejes_cortes:
@@ -44,10 +44,10 @@ const PlanesCorteCrud = () => {
             })) || [],
         });
       } else {
-        toast.error("Error al cargar los flejes del plan de corte");
+        toast.error('Error al cargar los flejes del plan de corte');
       }
     } catch (error) {
-      console.error("Error al cargar el plan de corte:", error);
+      console.error('Error al cargar el plan de corte:', error);
     } finally {
       setPreLoading(false);
     }
@@ -60,12 +60,14 @@ const PlanesCorteCrud = () => {
   const loadPlanes = async (
     page = 1,
     pageSize = PAGE_SIZE,
-    searchTerm = "",
+    searchTerm = '',
     filters,
   ) => {
     return await window.api.planes.getAll({
       page,
       pageSize,
+      searchTerm,
+      estado: filters.find((f) => f.name === 'estado')?.value || null,
     });
   };
 
@@ -97,20 +99,33 @@ const PlanesCorteCrud = () => {
     setInitFilters,
   } = useDataTable({
     fetchData: loadPlanes,
-    fetchFilters: () => {},
+    fetchFilters: () => {
+      return {
+        estado: [
+          {
+            value: 1,
+            label: 'Completado',
+          },
+          {
+            value: 0,
+            label: 'Pendiente',
+          },
+        ],
+      };
+    },
     onDeleteConfirm: handleConfirmDelete,
     onCreateConfirm: handleConfirm,
     onEditConfirm: handleConfirmEdit,
-    initFilters: [],
+    initFilters: initFilters,
   });
 
-    const handleToggleStats = (row) => {
-    setSelectedItem(row)
+  const handleToggleStats = (row) => {
+    setSelectedItem(row);
     setOpenStats((prev) => !prev);
   };
 
   return (
-    <Box sx={{ width: "100%" }}>
+    <Box sx={{ width: '100%' }}>
       <Modal
         showCancel
         showCustom
@@ -158,6 +173,13 @@ const PlanesCorteCrud = () => {
           </Box>
         }
       />
+      <DataFilters
+        sx={{ mb: 2 }}
+        loading={loadingFilters}
+        filters={filters}
+        handleFilterChange={handleFilterChange}
+        handleCleanFilters={handleClearAllFilters}
+      />
       <PlanesCorteTable
         loading={loading}
         rows={planes}
@@ -171,8 +193,8 @@ const PlanesCorteCrud = () => {
         handleEdit={(row) => {
           handlePreEdit(row);
         }}
-        handleToggleStats={(row)=>{
-          handleToggleStats(row)
+        handleToggleStats={(row) => {
+          handleToggleStats(row);
         }}
       />
     </Box>

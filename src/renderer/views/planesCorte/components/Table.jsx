@@ -1,10 +1,11 @@
-import { IconButton, Stack, Typography } from "@mui/material";
-import { DataGrid } from "@mui/x-data-grid";
-import DataGridFooter from "../../../components/common/DataGridFooter";
-import { PAGE_SIZE, ROW_HEIGHT } from "../../../../utils/constants";
-import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
-import ActionMenu from "../../../components/common/ActionMenu";
-import React from "react";
+import { IconButton, Stack, Typography } from '@mui/material';
+import { DataGrid } from '@mui/x-data-grid';
+import DataGridFooter from '../../../components/common/DataGridFooter';
+import { PAGE_SIZE, ROW_HEIGHT } from '../../../../utils/constants';
+import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
+import ActionMenu from '../../../components/common/ActionMenu';
+import React from 'react';
+import { formatFecha } from '../../../../server/utils/functions';
 
 const PlanesCorteTable = ({
   loading = false,
@@ -19,7 +20,7 @@ const PlanesCorteTable = ({
 }) => {
   return (
     <DataGrid
-      sx={{ maxHeight: "calc(100vh - 200px)", width: "100%" }}
+      sx={{ maxHeight: 'calc(100vh - 200px)', width: '100%' }}
       density="standard"
       loading={loading}
       rowCount={total}
@@ -67,11 +68,11 @@ const getColumns = (
   handleToggleStats = () => {},
 ) => [
   {
-    field: "id",
-    headerName: "No. Plan",
+    field: 'id',
+    headerName: 'No. Plan',
     editable: false,
-    align: "left",
-    flex: 1,
+    align: 'left',
+    width: 100,
     renderCell: (params) => (
       <Stack
         height={1}
@@ -80,16 +81,16 @@ const getColumns = (
         justifyContent="center"
       >
         <Typography variant="body2" fontWeight={500}>
-          {params?.row?.id || "-"}
+          {params?.row?.id || '-'}
         </Typography>
       </Stack>
     ),
   },
   {
-    field: "ancho_estipulado",
-    headerName: "Ancho Estipulado (mm)",
+    field: 'ancho_estipulado',
+    headerName: 'Ancho Estipulado (mm)',
     editable: false,
-    align: "left",
+    align: 'left',
     flex: 1,
 
     renderCell: (params) => (
@@ -100,16 +101,16 @@ const getColumns = (
         justifyContent="center"
       >
         <Typography variant="body2" fontWeight={500}>
-          {params?.row?.ancho_estipulado || "-"}
+          {params?.row?.ancho_estipulado || '-'}
         </Typography>
       </Stack>
     ),
   },
   {
-    field: "cantidad_flejes_cortes",
-    headerName: "Cantidad de Flejes a Cortar",
+    field: 'cantidad_flejes_cortes',
+    headerName: 'Cantidad de Flejes a Cortar',
     editable: false,
-    align: "left",
+    align: 'left',
     flex: 1,
     renderCell: (params) => (
       <Stack
@@ -119,17 +120,17 @@ const getColumns = (
         justifyContent="center"
       >
         <Typography variant="body2" fontWeight={500}>
-          {params?.row?.cantidad_flejes_cortes || "-"}
+          {params?.row?.cantidad_flejes_cortes || '-'}
         </Typography>
       </Stack>
     ),
   },
   {
-    field: "creado",
-    headerName: "Fecha de creación",
+    field: 'creado',
+    headerName: 'Fecha de creación',
     editable: false,
-    align: "center",
-    flex: 1,
+    align: 'center',
+    width: 150,
     renderCell: (params) => {
       return (
         <Stack
@@ -138,20 +139,19 @@ const getColumns = (
           alignSelf="center"
           justifyContent="center"
         >
-          <Typography variant="body2" textAlign={"start"} fontWeight={500}>
-            {params?.row?.creado || "-"}
+          <Typography variant="body2" textAlign={'start'} fontWeight={500}>
+            {formatFecha(params?.row?.creado)}
           </Typography>
         </Stack>
       );
     },
   },
   {
-    field: "actions",
-    headerName: "Actions",
+    field: 'actions',
+    headerName: 'Actions',
     editable: false,
-    align: "center",
+    align: 'center',
     flex: 1,
-    maxWidth: 70,
     renderCell: (params) => (
       <Stack
         height={1}
@@ -172,10 +172,12 @@ const getColumns = (
           }}
           options={[
             {
-              icon: "stats",
-              label: "Estadísticas",
-              onHandle: ()=>{handleToggleStats(params.row)},
-              id: "stats",
+              icon: 'stats',
+              label: 'Estadísticas',
+              onHandle: () => {
+                handleToggleStats(params.row);
+              },
+              id: 'stats',
             },
           ]}
         >

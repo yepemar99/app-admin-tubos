@@ -6,8 +6,8 @@ const DataGrid = {
   },
   styleOverrides: {
     root: ({ theme }) => ({
-      border: 'none',
-      borderRadius: '0 !important',
+      border: '1px solid rgba(0, 0, 0, 0.12)',
+      borderRadius: '10px !important',
       '--DataGrid-rowBorderColor': theme.palette.info.main,
       '&:hover, &:focus': {
         '*::-webkit-scrollbar, *::-webkit-scrollbar-thumb': {

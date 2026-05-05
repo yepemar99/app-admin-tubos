@@ -63,6 +63,10 @@ contextBridge.exposeInMainWorld('api', {
   operarios: {
     getAll: () => ipcRenderer.invoke('operarios:getAll'),
   },
+  stats: {
+    getTubosStats: (payload) =>
+      ipcRenderer.invoke('stats:getTubosStats', payload),
+  },
   actions: {
     selectDirectory: () => ipcRenderer.invoke('select:directory'),
   },

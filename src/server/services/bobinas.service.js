@@ -55,7 +55,7 @@ function resolveOutputFilePath(destinationPath = '') {
 export async function listarBobinasService({
   page = 1,
   pageSize = 20,
-  orderBy = 'creado',
+  orderBy = 'id',
   orderDir = 'DESC',
   searchTerm = '',
   calidad_id,
@@ -112,6 +112,28 @@ export async function listarBobinasService({
     const countResult = await conn.query(countQuery);
     const total = countResult[0]?.total ? Number(countResult[0].total) : 0;
 
+    const hasFilters = Boolean(
+      searchTerm ||
+      (calidad_id && calidad_id !== 0) ||
+      (activo !== undefined && activo !== null) ||
+      (plan_id && plan_id !== 0),
+    );
+
+    let orderBySQL;
+    if (!hasFilters && safeOrderBy === 'b.id') {
+      orderBySQL = `${safeOrderBy} ${safeOrderDir}`;
+    } else {
+      const secondaryOrderCols = ['tc.nombre', 'b.concepto'];
+      const orderParts = [];
+      orderParts.push(`${safeOrderBy} ${safeOrderDir}`);
+      for (const col of secondaryOrderCols) {
+        if (col !== safeOrderBy && !orderParts.some((p) => p.startsWith(col))) {
+          orderParts.push(`${col} ${safeOrderDir}`);
+        }
+      }
+      orderBySQL = orderParts.join(', ');
+    }
+
     const selectQuery = `
     WITH BobinasCTE AS (
       SELECT 
@@ -137,7 +159,7 @@ export async function listarBobinasService({
     FROM BobinasCTE b
     LEFT JOIN Tipos_Calidad tc ON b.calidad_id = tc.id
     LEFT JOIN Fabricantes f ON b.fabricante_id = f.id
-    ORDER BY ${safeOrderBy} ${safeOrderDir}
+    ORDER BY ${orderBySQL}
     OFFSET ${offset} ROWS FETCH NEXT ${safePageSize} ROWS ONLY
   `;
 

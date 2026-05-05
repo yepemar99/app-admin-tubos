@@ -5,6 +5,8 @@ export async function listarPlanesCorteService({
   pageSize = 20,
   orderBy = 'id',
   orderDir = 'DESC',
+  searchTerm = '',
+  estado = null,
 } = {}) {
   const conn = database.getConnection();
 
@@ -14,27 +16,20 @@ export async function listarPlanesCorteService({
   orderDir = orderDir.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
 
   try {
-    // -------------------------------
-    // WHERE dinámico
-    // -------------------------------
     let whereClauses = ['1=1'];
 
-    // if (region) whereClauses.push(`region = '${region}'`);
-    // if (diametro) whereClauses.push(`diametro = ${diametro}`);
-    // if (longitudinal) whereClauses.push(`longitud = ${longitudinal}`);
-    // if (transversal) whereClauses.push(`transversal = ${transversal}`);
-    // if (dimensiones) whereClauses.push(`dimensiones = '${dimensiones}'`);
-    // if (codigo) whereClauses.push(`codigo = '${codigo}'`);
+    if (searchTerm) {
+      whereClauses.push(`
+        (
+          codigo LIKE '%${searchTerm}%'
+          OR id LIKE '%${searchTerm}%'
+        )
+      `);
+    }
 
-    // if (searchText) {
-    //   whereClauses.push(`
-    //     (
-    //       codigo LIKE '%${searchText}%'
-    //       OR art_codigo LIKE '%${searchText}%'
-    //       OR designacion LIKE '%${searchText}%'
-    //     )
-    //   `);
-    // }
+    if (estado && Number(estado) !== null) {
+      whereClauses.push(`t.estado = ${Number(estado)}`);
+    }
 
     const whereSQL = whereClauses.join(' AND ');
 
@@ -42,24 +37,6 @@ export async function listarPlanesCorteService({
     // ORDER BY dinámico
     // -------------------------------
     let orderSQL = `${orderBy} ${orderDir}`;
-
-    // if (searchText) {
-    //   orderSQL = `
-    //   CASE
-    //     WHEN codigo = '${searchText}' THEN 100
-    //     WHEN art_codigo = '${searchText}' THEN 90
-
-    //     WHEN codigo LIKE '${searchText}%' THEN 80
-    //     WHEN art_codigo LIKE '${searchText}%' THEN 70
-
-    //     WHEN codigo LIKE '%${searchText}%' THEN 50
-    //     WHEN art_codigo LIKE '%${searchText}%' THEN 40
-    //     WHEN designacion LIKE '%${searchText}%' THEN 30
-    //     ELSE 0
-    //   END DESC,
-    //   id DESC
-    //   `;
-    // }
 
     // -------------------------------
     // Total de registros
