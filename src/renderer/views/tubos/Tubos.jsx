@@ -34,13 +34,6 @@ const Tubos = () => {
     sortModel,
   ) => {
     const { orderBy, orderDir } = resolveSortParams(sortModel, sortFieldMap);
-    console.log(
-      'Cargando tubos con params:',
-      orderBy,
-      orderDir,
-      searchTerm,
-      filters,
-    );
     return await window.api.tubos.getAll({
       page,
       pageSize,
@@ -53,11 +46,15 @@ const Tubos = () => {
   };
 
   const onCreateConfirm = async (data) => {
+    console.log('Creando tubo con data:', data);
     return await window.api.tubos.create(data);
   };
 
-  const onEditConfirm = async (id, data) => {
-    return await window.api.tubos.update(id, data);
+  const onEditConfirm = async (data) => {
+    return await window.api.tubos.update({
+      id: data?.id,
+      tubo: data,
+    });
   };
 
   const onDeleteConfirm = async (id) => {

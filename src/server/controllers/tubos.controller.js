@@ -67,6 +67,7 @@ const tubosController = {
 
   async crearTubo(_, payload) {
     try {
+      console.log('Payload en crearTubo:', payload);
       const result = await crearTuboService(payload);
       return { success: true, data: result.data };
     } catch (error) {
@@ -77,6 +78,7 @@ const tubosController = {
 
   async actualizarTubo(_, payload) {
     try {
+      console.log('Payload en crearTubo:', payload);
       const result = await actualizarTuboService(payload);
       return { success: true, data: result.data };
     } catch (error) {

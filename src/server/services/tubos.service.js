@@ -132,7 +132,7 @@ export async function listarTiposTubosService() {
 export async function listarTubosService({
   page = 1,
   pageSize = 20,
-  orderBy = 'creado',
+  orderBy = 'id',
   orderDir = 'DESC',
   calidad_id,
   tipo_id,
@@ -266,7 +266,7 @@ export async function listarTubosService({
           fleje_concepto: row.fleje_concepto || 'N/A',
           art_concepto: row.art_concepto,
           medida: row.medida,
-          activo: Boolean(row.activo),
+          activo: Number(row.activo),
           ancho: Number(row.ancho),
           alto: Number(row.alto),
           longitud: Number(row.longitud),
@@ -324,31 +324,77 @@ export async function crearTuboService({
       OUTPUT INSERTED.id AS id
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
+
+    // Coerciones seguras para evitar undefined/NaN que rompan el binding ODBC
+    const safe_calidad_id = Number.isFinite(Number(calidad_id))
+      ? Number(calidad_id)
+      : null;
+    const safe_tipo_id = Number.isFinite(Number(tipo_id))
+      ? Number(tipo_id)
+      : null;
+    const safe_fleje_id = Number.isFinite(Number(fleje_id))
+      ? Number(fleje_id)
+      : null;
+    const safe_medida = medida != null ? String(medida) : '';
+    const safe_art_concepto = art_concepto != null ? String(art_concepto) : '';
+    const safe_activo = activo ? 1 : 0;
+    const safe_ancho = Number.isFinite(Number(ancho)) ? Number(ancho) : 0;
+    const safe_alto = Number.isFinite(Number(alto)) ? Number(alto) : 0;
+    const safe_longitud = Number.isFinite(Number(longitud))
+      ? Number(longitud)
+      : 0;
+    const safe_diametro = Number.isFinite(Number(diametro))
+      ? Number(diametro)
+      : 0;
+    const safe_espesor = Number.isFinite(Number(espesor)) ? Number(espesor) : 0;
+    const safe_peso_unitario = Number.isFinite(Number(peso_unitario))
+      ? Number(peso_unitario)
+      : 0;
+    const safe_peso_total = Number.isFinite(Number(peso_total))
+      ? Number(peso_total)
+      : 0;
+    const safe_unidades = Number.isFinite(Number(unidades))
+      ? Number(unidades)
+      : 0;
+    const safe_num_por_paq = Number.isFinite(Number(num_por_paq))
+      ? Number(num_por_paq)
+      : 0;
+    const safe_alto_paq = Number.isFinite(Number(alto_paq))
+      ? Number(alto_paq)
+      : 0;
+    const safe_ancho_paq = Number.isFinite(Number(ancho_paq))
+      ? Number(ancho_paq)
+      : 0;
+    const safe_num_paquetes = Number.isFinite(Number(num_paquetes))
+      ? Number(num_paquetes)
+      : 0;
+
     const result = await conn.query(insertQuery, [
-      calidad_id,
-      tipo_id,
-      fleje_id || null,
-      medida,
-      art_concepto,
-      activo ? 1 : 0,
-      ancho,
-      alto,
-      longitud,
-      diametro,
-      espesor,
-      peso_unitario,
-      peso_total,
-      unidades,
-      num_por_paq,
-      alto_paq,
-      ancho_paq,
-      num_paquetes,
+      safe_calidad_id,
+      safe_tipo_id,
+      safe_fleje_id,
+      safe_medida,
+      safe_art_concepto,
+      safe_activo,
+      safe_ancho,
+      safe_alto,
+      safe_longitud,
+      safe_diametro,
+      safe_espesor,
+      safe_peso_unitario,
+      safe_peso_total,
+      safe_unidades,
+      safe_num_por_paq,
+      safe_alto_paq,
+      safe_ancho_paq,
+      safe_num_paquetes,
     ]);
 
     const tuboId = Number(result?.[0]?.id || result?.insertId);
     if (!Number.isFinite(tuboId) || tuboId <= 0) {
       throw new Error('No se pudo obtener el ID del tubo creado.');
     }
+    console.log('Tubo creado con ID:', tuboId);
 
     if (maquinasNormalizadas.length > 0) {
       const valuesPlaceholders = maquinasNormalizadas
@@ -395,9 +441,9 @@ export async function crearTuboService({
   }
 }
 
-export async function actualizarTuboService(
+export async function actualizarTuboService({
   id,
-  {
+  tubo: {
     calidad_id,
     tipo_id,
     maquina_ids,
@@ -417,7 +463,7 @@ export async function actualizarTuboService(
     alto_paq,
     ancho_paq,
   },
-) {
+}) {
   try {
     const conn = database.getConnection();
     const tuboId = Number(id);
@@ -438,23 +484,24 @@ export async function actualizarTuboService(
       WHERE id = ?
     `;
     await conn.query(updateQuery, [
-      calidad_id,
-      tipo_id,
-      fleje_id || null,
-      medida,
-      art_concepto,
+      // Coerce values similarly for update
+      Number.isFinite(Number(calidad_id)) ? Number(calidad_id) : null,
+      Number.isFinite(Number(tipo_id)) ? Number(tipo_id) : null,
+      Number.isFinite(Number(fleje_id)) ? Number(fleje_id) : null,
+      medida != null ? String(medida) : '',
+      art_concepto != null ? String(art_concepto) : '',
       activo ? 1 : 0,
-      ancho,
-      alto,
-      longitud,
-      diametro,
-      espesor,
-      peso_unitario,
-      peso_total,
-      unidades,
-      num_por_paq,
-      alto_paq,
-      ancho_paq,
+      Number.isFinite(Number(ancho)) ? Number(ancho) : 0,
+      Number.isFinite(Number(alto)) ? Number(alto) : 0,
+      Number.isFinite(Number(longitud)) ? Number(longitud) : 0,
+      Number.isFinite(Number(diametro)) ? Number(diametro) : 0,
+      Number.isFinite(Number(espesor)) ? Number(espesor) : 0,
+      Number.isFinite(Number(peso_unitario)) ? Number(peso_unitario) : 0,
+      Number.isFinite(Number(peso_total)) ? Number(peso_total) : 0,
+      Number.isFinite(Number(unidades)) ? Number(unidades) : 0,
+      Number.isFinite(Number(num_por_paq)) ? Number(num_por_paq) : 0,
+      Number.isFinite(Number(alto_paq)) ? Number(alto_paq) : 0,
+      Number.isFinite(Number(ancho_paq)) ? Number(ancho_paq) : 0,
       tuboId,
     ]);
 
@@ -543,7 +590,7 @@ export async function informeTubos({ path: destinationPath, ids } = {}) {
       FROM Tubos t
       LEFT JOIN Tipos_Calidad tc ON t.calidad_id = tc.id
       WHERE ${whereClauses.join(' AND ')}
-      ORDER BY t.creado DESC
+      ORDER BY t.id DESC
     `;
 
     const rows = await conn.query(query);
