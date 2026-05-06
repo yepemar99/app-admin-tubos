@@ -307,6 +307,7 @@ export async function crearTuboService({
   num_por_paq,
   alto_paq,
   ancho_paq,
+  num_paquetes,
 }) {
   try {
     const conn = database.getConnection();
@@ -319,9 +320,9 @@ export async function crearTuboService({
 
     const insertQuery = `
       INSERT INTO Tubos
-      (calidad_id, tipo_id, fleje_id, medida, art_concepto, activo, ancho, alto, longitud, diametro, espesor, peso_unitario, peso_total, unidades, num_por_paq, alto_paq, ancho_paq)
+      (calidad_id, tipo_id, fleje_id, medida, art_concepto, activo, ancho, alto, longitud, diametro, espesor, peso_unitario, peso_total, unidades, num_por_paq, alto_paq, ancho_paq, num_paquetes)
       OUTPUT INSERTED.id AS id
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
     const result = await conn.query(insertQuery, [
       calidad_id,
@@ -341,6 +342,7 @@ export async function crearTuboService({
       num_por_paq,
       alto_paq,
       ancho_paq,
+      num_paquetes,
     ]);
 
     const tuboId = Number(result?.[0]?.id || result?.insertId);
@@ -384,6 +386,7 @@ export async function crearTuboService({
       num_por_paq: Number(num_por_paq),
       alto_paq: Number(alto_paq),
       ancho_paq: Number(ancho_paq),
+      num_paquetes: Number(num_paquetes),
       creado: new Date(),
     };
   } catch (error) {

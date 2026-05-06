@@ -254,6 +254,7 @@ const useDataTable = ({
     handleClearAllFilters,
     setInitFilters,
     handleSelectItems,
+    handleFetchData: loadData,
   };
 };
 

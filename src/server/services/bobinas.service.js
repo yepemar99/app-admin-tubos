@@ -55,8 +55,8 @@ function resolveOutputFilePath(destinationPath = '') {
 export async function listarBobinasService({
   page = 1,
   pageSize = 20,
-  orderBy = 'id',
-  orderDir = 'DESC',
+  orderBy,
+  orderDir,
   searchTerm = '',
   calidad_id,
   plan_id,
@@ -121,7 +121,7 @@ export async function listarBobinasService({
 
     let orderBySQL;
     if (!hasFilters && safeOrderBy === 'b.id') {
-      orderBySQL = `${safeOrderBy} ${safeOrderDir}`;
+      orderBySQL = `id DESC`;
     } else {
       const secondaryOrderCols = ['tc.nombre', 'b.concepto'];
       const orderParts = [];
@@ -174,7 +174,7 @@ export async function listarBobinasService({
         espesor: Number(row.espesor),
         ancho: Number(row.ancho),
         peso_medio: Number(row.peso_medio),
-        activa: Boolean(row.activa),
+        activa: Number(row.activa),
         calidad_id: row.calidad_id ? Number(row.calidad_id) : null,
         fabricante_id: row.fabricante_id ? Number(row.fabricante_id) : null,
         calidad: row.calidad_nombre || null,
@@ -251,6 +251,8 @@ export async function actualizarBobinaService({ id, bobina } = {}) {
     const fields = [];
     const values = [];
 
+    console.log('Updating bobina with id:', id, 'and data:', bobina);
+
     if (!id) {
       throw new Error(
         "El campo 'id' es obligatorio para actualizar una bobina.",
@@ -274,7 +276,7 @@ export async function actualizarBobinaService({ id, bobina } = {}) {
     SET ${fields.join(', ')}
     WHERE id = ?
   `;
-
+    console.log('Executing update query:', updateQuery, 'with values:', values);
     await conn.query(updateQuery, values);
     return { data: { id, ...bobina } };
   } catch (error) {
@@ -307,6 +309,7 @@ export async function listarBobinasCortadasService({
   orderBy = 'creado',
   orderDir = 'DESC',
   plan_id,
+  bobina_id,
 }) {
   try {
     const conn = database.getConnection();
@@ -336,21 +339,29 @@ export async function listarBobinasCortadasService({
     let whereClauses = ['1=1'];
 
     if (plan_id && plan_id !== 0)
-      whereClauses.push(`plan_corte_id = ${Number(plan_id)}`);
+      whereClauses.push(`bc.plan_corte_id = ${Number(plan_id)}`);
+    if (bobina_id && bobina_id !== 0)
+      whereClauses.push(`bc.bobina_id = ${Number(bobina_id)}`);
 
     const selectQuery = `
-      SELECT bc.*, b.ancho, b.espesor, b.peso_medio, t.entrada, t.salida , o.nombre 
+      SELECT 
+        bc.id, bc.peso_real, bc.ancho_inicial, bc.ancho_final, 
+        bc.espesor_inicial, bc.espesor_final, bc.plan_corte_id, 
+        bc.bobina_id, bc.turno_id, bc.operario_id, bc.creado,
+        b.ancho, b.espesor, b.peso_medio, 
+        t.entrada, t.salida, 
+        o.nombre 
       FROM Bobinas_Cortadas bc
       JOIN Bobinas b ON bc.bobina_id = b.id
       JOIN Turnos t ON bc.turno_id = t.id
       JOIN Operarios o ON bc.operario_id = o.id
-      JOIN Planes_Corte p ON bc.plan_corte_id = p.id
-      WHERE p.id = ?
+      WHERE ${whereClauses.join(' AND ')}
       ORDER BY ${safeOrderBy} ${safeOrderDir}
       OFFSET ${offset} ROWS FETCH NEXT ${safePageSize} ROWS ONLY
     `;
 
-    const rows = await conn.query(selectQuery, [plan_id]);
+    console.log('Executing query:', selectQuery);
+    const rows = await conn.query(selectQuery);
 
     return {
       data: rows.map((row) => ({

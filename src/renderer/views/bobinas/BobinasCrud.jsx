@@ -18,6 +18,7 @@ import { resolveSortParams } from '../../utils/functions';
 
 const BobinasCrud = () => {
   const { tiposCalidad } = useContext(DataContext);
+  const [alertDelete, setAlertDelete] = useState(false);
 
   const sortFieldMap = {
     Calidad: 'calidad',
@@ -48,6 +49,7 @@ const BobinasCrud = () => {
   };
 
   const onEdit = async (data) => {
+    console.log('Update:', data);
     return await window.api.bobinas.update({ bobina: data, id: data?.id });
   };
 
@@ -95,6 +97,7 @@ const BobinasCrud = () => {
     handleDelete,
     showDetail,
     selectedItem,
+    setSelectedItem,
     handleDetail,
     showForm,
     handleEdit,
@@ -108,6 +111,7 @@ const BobinasCrud = () => {
     setInitFilters,
     selectedIds,
     handleSelectItems,
+    handleFetchData,
   } = useDataTable({
     fetchData: loadBobinas,
     fetchFilters: loadFilters,
@@ -117,8 +121,45 @@ const BobinasCrud = () => {
     initFilters: [...initFilters],
   });
 
+  const onCancel = async () => {
+    if (selectedItem) {
+      console.log('Marking bobina as inactive:', selectedItem);
+      const payload = { ...selectedItem };
+      delete payload.fabricante;
+      delete payload.calidad;
+      await window.api.bobinas.update({
+        bobina: { ...payload, activa: 0 },
+        id: selectedItem?.id,
+      });
+      handleFetchData(page, searchTerm, filters);
+      setAlertDelete(false);
+      toast.success('Bobina marcada como inactiva.');
+    } else {
+      setAlertDelete(false);
+      toast.error(
+        'No se pudo guardar la bobina. Por favor, inténtelo manualmente.',
+      );
+    }
+    setSelectedItem(null);
+  };
+
   const handleManualSort = (model) => {
     handleSortModel(model);
+  };
+
+  const handleValidDelete = async (row) => {
+    const id = row?.id;
+    if (!id) return false;
+    const bobinasCortadasData = await window.api.bobinas.getAllCortadas({
+      bobina_id: id,
+    });
+    if (bobinasCortadasData?.data?.length > 0) {
+      setAlertDelete(true);
+      setSelectedItem(row);
+      return false;
+    } else {
+      return true;
+    }
   };
 
   const generarInventario = async (ids = []) => {
@@ -169,6 +210,21 @@ const BobinasCrud = () => {
       >
         <Typography>Esta acción no se puede deshacer.</Typography>
       </Modal>
+      <Modal
+        showCancel
+        showCustom
+        title="Este bobina no se puede eliminar porque ya se ha usado en un plan de corte. ¿Desea marcarlo como inactiva en su lugar?"
+        open={alertDelete}
+        handleCustom={() => {
+          onCancel();
+        }}
+        handleCancel={() => {
+          setAlertDelete(false);
+        }}
+      >
+        <Typography>Esta acción no se puede deshacer.</Typography>
+      </Modal>
+
       <BobinasModal
         data={selectedItem}
         open={showForm}
@@ -218,7 +274,11 @@ const BobinasCrud = () => {
         sortModel={sortModel}
         handleChangePage={handlePageChange}
         handleDelete={(row) => {
-          handleDelete(row);
+          handleValidDelete(row || null).then((canDelete) => {
+            if (canDelete) {
+              handleDelete(row);
+            }
+          });
         }}
         handleDetail={() => {}}
         handleEdit={(row) => {

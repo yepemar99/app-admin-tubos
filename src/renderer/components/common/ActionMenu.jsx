@@ -1,14 +1,14 @@
-import { useState } from "react";
-import Box from "@mui/material/Box";
-import Menu from "@mui/material/Menu";
-import MenuItem from "@mui/material/MenuItem";
-import Typography from "@mui/material/Typography";
-import IconButton from "@mui/material/IconButton";
-import ListItemText from "@mui/material/ListItemText";
-import ListItemIcon from "@mui/material/ListItemIcon";
-import { Delete, Edit, RemoveRedEye } from "@mui/icons-material";
-import React from "react";
-import { muiIcons } from "../../icons";
+import { useState } from 'react';
+import Box from '@mui/material/Box';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
+import Typography from '@mui/material/Typography';
+import IconButton from '@mui/material/IconButton';
+import ListItemText from '@mui/material/ListItemText';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import { Delete, Edit, RemoveRedEye } from '@mui/icons-material';
+import React from 'react';
+import { muiIcons } from '../../icons';
 
 const ActionMenu = ({
   options = [],
@@ -24,7 +24,12 @@ const ActionMenu = ({
   const open = Boolean(anchorEl);
 
   const handleActionButtonClick = (event) => {
+    event.stopPropagation();
     setAnchorEl(event.currentTarget);
+  };
+
+  const handleActionButtonMouseDown = (event) => {
+    event.stopPropagation();
   };
 
   const handleActionMenuClose = () => {
@@ -34,7 +39,8 @@ const ActionMenu = ({
   return (
     <Box pr={2}>
       <IconButton
-        sx={{ borderRadius: "100%", height: 30, width: 30 }}
+        sx={{ borderRadius: '100%', height: 30, width: 30 }}
+        onMouseDown={handleActionButtonMouseDown}
         onClick={handleActionButtonClick}
       >
         {children}
@@ -47,10 +53,10 @@ const ActionMenu = ({
         onClick={handleActionMenuClose}
         sx={{
           mt: 0.5,
-          "& .MuiList-root": {},
+          '& .MuiList-root': {},
         }}
-        transformOrigin={{ horizontal: "right", vertical: "top" }}
-        anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
+        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
       >
         {options.length > 0 &&
           options.map((o, index) => {
@@ -58,19 +64,19 @@ const ActionMenu = ({
             return (
               <MenuItem key={o?.id + index} onClick={o?.onHandle}>
                 {IconComponent && (
-                  <ListItemIcon sx={{ mr: 1, fontSize: "h5.fontSize" }}>
+                  <ListItemIcon sx={{ mr: 1, fontSize: 'h5.fontSize' }}>
                     <IconComponent fontSize="inherit" />
                   </ListItemIcon>
                 )}
                 <ListItemText>
-                  <Typography>{o?.label || ""}</Typography>
+                  <Typography>{o?.label || ''}</Typography>
                 </ListItemText>
               </MenuItem>
             );
           })}
         {!hideDetail && (
           <MenuItem onClick={onDetail}>
-            <ListItemIcon sx={{ mr: 1, fontSize: "h5.fontSize" }}>
+            <ListItemIcon sx={{ mr: 1, fontSize: 'h5.fontSize' }}>
               <RemoveRedEye fontSize="inherit" />
             </ListItemIcon>
             <ListItemText>
@@ -80,21 +86,21 @@ const ActionMenu = ({
         )}
         {!hideEdit && (
           <MenuItem onClick={onEdit}>
-            <ListItemIcon sx={{ mr: 1, fontSize: "h5.fontSize" }}>
+            <ListItemIcon sx={{ mr: 1, fontSize: 'h5.fontSize' }}>
               <Edit fontSize="inherit" />
             </ListItemIcon>
             <ListItemText>
-              <Typography color={"text.primary"}>Editar</Typography>
+              <Typography color={'text.primary'}>Editar</Typography>
             </ListItemText>
           </MenuItem>
         )}
         {!hideDelete && (
           <MenuItem onClick={onDelete}>
-            <ListItemIcon sx={{ mr: 1, fontSize: "h5.fontSize" }}>
+            <ListItemIcon sx={{ mr: 1, fontSize: 'h5.fontSize' }}>
               <Delete fontSize="inherit" color="error" />
             </ListItemIcon>
             <ListItemText>
-              <Typography color={"error"}>Eliminar</Typography>
+              <Typography color={'error'}>Eliminar</Typography>
             </ListItemText>
           </MenuItem>
         )}
