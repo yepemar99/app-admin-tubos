@@ -224,7 +224,7 @@ export async function listarFlejesService({
         ancho: Number(row.ancho),
         peso_medio: Number(row.peso_medio),
         peso_total: Number(row.peso_total),
-        activo: Boolean(row.activo),
+        activo: Number(row.activo),
         calidad_id: row.calidad_id ? Number(row.calidad_id) : null,
         calidad: row.calidad_nombre || null,
         creado: row.creado,
@@ -286,9 +286,9 @@ export async function crearFlejeService({
   }
 }
 
-export async function actualizarFlejeService(
+export async function actualizarFlejeService({
   id,
-  {
+  fleje: {
     concepto,
     art_concepto,
     espesor,
@@ -299,7 +299,7 @@ export async function actualizarFlejeService(
     activo,
     calidad_id,
   },
-) {
+}) {
   try {
     const conn = database.getConnection();
     const updateQuery = `

@@ -67,6 +67,7 @@ const flejesController = {
 
   async actualizarFleje(_, payload) {
     try {
+      console.log('Payload en actualizarFleje:', payload);
       const result = await actualizarFlejeService(payload);
       return { success: true, data: result.data };
     } catch (error) {

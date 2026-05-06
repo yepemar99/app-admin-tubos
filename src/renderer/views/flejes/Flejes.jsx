@@ -45,8 +45,11 @@ const Flejes = () => {
     return await window.api.flejes.create(data);
   };
 
-  const onEditConfirm = async (id, data) => {
-    return await window.api.flejes.update(id, data);
+  const onEditConfirm = async (data) => {
+    return await window.api.flejes.update({
+      id: data.id,
+      fleje: data,
+    });
   };
 
   const onDeleteConfirm = async (id) => {

@@ -52,7 +52,6 @@ const DataFilters = ({
     return 'Seleccione un rango de fechas';
   };
 
-  console.log('filters en DataFilters:', filters);
   return (
     <Card sx={{ py: 1.5, px: 1, ...flexSpaceBetween, ...sx }}>
       <Box>
