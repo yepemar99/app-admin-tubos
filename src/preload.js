@@ -55,7 +55,7 @@ contextBridge.exposeInMainWorld('api', {
     getAll: () => ipcRenderer.invoke('maquinas:getAll'),
   },
   salidasPaqs: {
-    getAll: () => ipcRenderer.invoke('salidasPaqs:getAll'),
+    getAll: (payload) => ipcRenderer.invoke('salidasPaqs:getAll', payload),
     create: (payload) => ipcRenderer.invoke('salidasPaqs:create', payload),
     update: (payload) => ipcRenderer.invoke('salidasPaqs:update', payload),
     delete: (payload) => ipcRenderer.invoke('salidasPaqs:delete', payload),

@@ -1,24 +1,34 @@
-import React from "react";
-import useDataTable from "../../hooks/useDataTable";
-import { Box, Button, Modal, Typography } from "@mui/material";
-import LoadingModal from "../../components/common/LoadingModal";
-import ViewHeaderLayout from "../../layouts/ViewHeaderLayout";
-import { Add } from "@mui/icons-material";
-import { flex } from "../../utils/styles";
-import { PAGE_SIZE } from "../../../utils/constants";
-import SalidasPaqsTable from "./components/Table";
-import SalidaPaqsModal from "./components/Modal";
+import React from 'react';
+import useDataTable from '../../hooks/useDataTable';
+import { Box, Button, Modal, Typography } from '@mui/material';
+import LoadingModal from '../../components/common/LoadingModal';
+import ViewHeaderLayout from '../../layouts/ViewHeaderLayout';
+import { Add } from '@mui/icons-material';
+import { flex } from '../../utils/styles';
+import { PAGE_SIZE } from '../../../utils/constants';
+import SalidasPaqsTable from './components/Table';
+import SalidaPaqsModal from './components/Modal';
+import DataFilters from '../../components/common/DataFilters';
+import { initFilters } from './utils';
 
 const SalidaPaqs = () => {
   const loadSalidasPaqs = async (
     page = 1,
     pageSize = PAGE_SIZE,
-    searchTerm = "",
+    searchTerm = '',
     filters,
   ) => {
+    const operarioFilter = filters?.find(
+      (filter) => filter.name === 'operario_id',
+    );
+    const creadoFilter = filters?.find((filter) => filter.name === 'creado');
     return await window.api.salidasPaqs.getAll({
       page,
       pageSize,
+      searchTerm,
+      operario_id: operarioFilter?.value || '',
+      fechaInicial: creadoFilter?.valueStart || '',
+      fechaFinal: creadoFilter?.valueEnd || '',
     });
   };
 
@@ -61,15 +71,27 @@ const SalidaPaqs = () => {
     setInitFilters,
   } = useDataTable({
     fetchData: loadSalidasPaqs,
-    fetchFilters: () => {},
+    fetchFilters: async () => {
+      const result = await window.api.operarios.getAll();
+      const operarios = result?.data || [];
+
+      return {
+        operario_id: operarios.map((operario) => ({
+          value: operario.id,
+          label:
+            `${operario.nombre || ''} ${operario.apellido1 || ''} ${operario.apellido2 || ''}`.trim(),
+        })),
+        creado: [],
+      };
+    },
     onDeleteConfirm: onDeleteConfirm,
     onCreateConfirm: onCreateConfirm,
     onEditConfirm: onEditConfirm,
-    initFilters: [],
+    initFilters: initFilters,
   });
 
   return (
-    <Box sx={{ width: "100%" }}>
+    <Box sx={{ width: '100%' }}>
       <LoadingModal open={actionLoading} />
       <Modal
         showCancel
@@ -112,6 +134,13 @@ const SalidaPaqs = () => {
           </Box>
         }
       />
+      <DataFilters
+        sx={{ mb: 2 }}
+        loading={loadingFilters}
+        filters={filters}
+        handleFilterChange={handleFilterChange}
+        handleCleanFilters={handleClearAllFilters}
+      />
       <SalidasPaqsTable
         loading={loading}
         rows={salidasPaqs}
@@ -128,7 +157,7 @@ const SalidaPaqs = () => {
             tubo_id: row.tubo_id,
           });
           const tuboEncontrado = result.data[0];
-          console.log("Row a editar:", tuboEncontrado);
+          console.log('Row a editar:', tuboEncontrado);
           handleEdit({ ...row, calidad_id: tuboEncontrado.calidad_id });
         }}
       />

@@ -195,14 +195,17 @@ const useDataTable = ({
     if (!initializedFilters) setInitFilters();
   };
 
-  const handleFilterChange = (filterName, value) => {
+  const handleFilterChange = (filterName, value, type = 'select') => {
     if (filterName === 'search') {
       setSearchTerm(value);
       return;
     }
+
     const newFilters = filters.map((filter) => {
       if (filter.name === filterName) {
-        return { ...filter, value };
+        return type === 'daterange'
+          ? { ...filter, valueStart: value.start, valueEnd: value.end }
+          : { ...filter, value };
       }
       return filter;
     });
@@ -214,6 +217,8 @@ const useDataTable = ({
     const resetFilters = filters.map((filter) => ({
       ...filter,
       value: null,
+      valueStart: null,
+      valueEnd: null,
     }));
     setFilteredMallas(resetFilters);
   };
