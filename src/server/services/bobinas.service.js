@@ -123,7 +123,7 @@ export async function listarBobinasService({
     if (!hasFilters && safeOrderBy === 'b.id') {
       orderBySQL = `id DESC`;
     } else {
-      const secondaryOrderCols = ['tc.nombre', 'b.concepto'];
+      const secondaryOrderCols = ['tc.nombre', 'b.concepto', 'b.id'];
       const orderParts = [];
       orderParts.push(`${safeOrderBy} ${safeOrderDir}`);
       for (const col of secondaryOrderCols) {

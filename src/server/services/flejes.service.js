@@ -84,7 +84,7 @@ export async function listarTodosFlejesService({ calidad_id = null }) {
           calidad_id, 
           ROW_NUMBER() OVER (ORDER BY creado DESC) AS rn
         FROM Flejes
-        WHERE ${whereSQL} -- Filtrar dentro del CTE es más eficiente para el rn
+        WHERE ${whereSQL}
       )
       SELECT *
       FROM FlejesCTE
@@ -110,7 +110,7 @@ export async function listarTodosFlejesService({ calidad_id = null }) {
 export async function listarFlejesService({
   page = 1,
   pageSize = 20,
-  orderBy = 'creado',
+  orderBy = 'id',
   orderDir = 'DESC',
   searchTerm = '',
   calidad_id,
@@ -136,7 +136,7 @@ export async function listarFlejesService({
       creado: 'b.creado',
     };
 
-    const safeOrderBy = allowedOrderBy[String(orderBy)] || 'b.creado';
+    const safeOrderBy = allowedOrderBy[String(orderBy)] || 'b.id';
     const safeOrderDir =
       String(orderDir).toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
 
@@ -164,6 +164,27 @@ export async function listarFlejesService({
     const countResult = await conn.query(countQuery);
     const total = countResult[0]?.total ? Number(countResult[0].total) : 0;
 
+    const hasFilters = Boolean(
+      searchTerm ||
+      (calidad_id && calidad_id !== 0) ||
+      (activo !== undefined && activo !== null),
+    );
+
+    let orderBySQL;
+    if (!hasFilters && safeOrderBy === 'b.id') {
+      orderBySQL = `id DESC`;
+    } else {
+      const secondaryOrderCols = ['tc.nombre', 'b.espesor', 'b.ancho', 'b.id'];
+      const orderParts = [];
+      orderParts.push(`${safeOrderBy} ${safeOrderDir}`);
+      for (const col of secondaryOrderCols) {
+        if (col !== safeOrderBy && !orderParts.some((p) => p.startsWith(col))) {
+          orderParts.push(`${col} ${safeOrderDir}`);
+        }
+      }
+      orderBySQL = orderParts.join(', ');
+    }
+
     const selectQuery = `
     WITH FlejesCTE AS (
       SELECT 
@@ -187,7 +208,7 @@ export async function listarFlejesService({
       tc.nombre AS calidad_nombre
     FROM FlejesCTE b
     LEFT JOIN Tipos_Calidad tc ON b.calidad_id = tc.id
-    ORDER BY ${safeOrderBy} ${safeOrderDir}
+    ORDER BY ${orderBySQL}
     OFFSET ${offset} ROWS FETCH NEXT ${safePageSize} ROWS ONLY
   `;
 
