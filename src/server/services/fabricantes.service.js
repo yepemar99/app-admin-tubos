@@ -1,4 +1,4 @@
-import database from "../../db/database";
+import database from '../../db/database';
 
 export async function listarTodosFabricantesService() {
   try {
@@ -17,7 +17,8 @@ export async function listarTodosFabricantesService() {
         FROM Fabricantes
       )
       SELECT *
-      FROM FabricantesCTE
+      FROM FabricantesCTE f
+      ORDER BY f.nombre ASC
     `;
 
     const rows = await conn.query(selectQuery);
@@ -31,7 +32,7 @@ export async function listarTodosFabricantesService() {
       total,
     };
   } catch (error) {
-    console.error("Error listando fabricantes:", error.message);
+    console.error('Error listando fabricantes:', error.message);
     throw error;
   }
 }

@@ -1,4 +1,4 @@
-import database from "../../db/database";
+import database from '../../db/database';
 export async function listarMaquinasService() {
   try {
     const conn = database.getConnection();
@@ -17,7 +17,7 @@ export async function listarMaquinasService() {
       total: rows.length,
     };
   } catch (error) {
-    console.error("Error listando maquinas:", error.message);
+    console.error('Error listando maquinas:', error.message);
     throw error;
   }
 }

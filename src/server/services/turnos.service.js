@@ -1,18 +1,18 @@
-import database from "../../db/database";
-import { toSqlServerUnicode } from "../utils/functions";
+import database from '../../db/database';
+import { toSqlServerUnicode } from '../utils/functions';
 
 export async function listarTurnosService({
   page = 1,
   pageSize = 20,
-  orderBy = "id",
-  orderDir = "DESC",
+  orderBy = 'id',
+  orderDir = 'DESC',
 }) {
   try {
     const conn = database.getConnection();
 
-    const allowedOrderFields = ["id"];
-    if (!allowedOrderFields.includes(orderBy)) orderBy = "id";
-    orderDir = orderDir.toUpperCase() === "ASC" ? "ASC" : "DESC";
+    const allowedOrderFields = ['id'];
+    if (!allowedOrderFields.includes(orderBy)) orderBy = 'id';
+    orderDir = orderDir.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
     let orderSQL = `${orderBy} ${orderDir}`;
 
     const countQuery = `
@@ -45,7 +45,7 @@ export async function listarTurnosService({
       total,
     };
   } catch (error) {
-    console.error("Error listando turnos:", error.message);
+    console.error('Error listando turnos:', error.message);
     throw error;
   }
 }
@@ -67,18 +67,18 @@ export async function crearTurnoService(turnoData) {
 
     return { id: result };
   } catch (err) {
-    console.error("Error creando Turno:", err.message);
+    console.error('Error creando Turno:', err.message);
     throw err;
   }
 }
 
-export async function actualizarTurnoService(data = { turno: null, id: "" }) {
+export async function actualizarTurnoService(data = { turno: null, id: '' }) {
   try {
     const conn = database.getConnection();
     const { turno, id } = data;
 
     if (!turno || !id) {
-      throw new Error("Faltan datos o el id");
+      throw new Error('Faltan datos o el id');
     }
 
     const query = `
@@ -94,25 +94,25 @@ export async function actualizarTurnoService(data = { turno: null, id: "" }) {
     const result = await conn.query(query, values);
     return { data: result };
   } catch (err) {
-    console.error("Error creando turno:", err.message);
+    console.error('Error actualizando turno:', err.message);
     throw err;
   }
 }
 
-export async function eliminarTurnoService(id = "") {
+export async function eliminarTurnoService(id = '') {
   try {
     if (!id) {
-      throw new Error("ID de turno no proporcionado para eliminación.");
+      throw new Error('ID de turno no proporcionado para eliminación.');
     }
     const conn = database.getConnection();
     const query = `DELETE FROM Turnos WHERE id = ?`;
     const result = await conn.query(query, [id]);
     console.log(
-      `Turno con ID ${id} eliminada. Filas afectadas: ${result.affectedRows}`
+      `Turno con ID ${id} eliminada. Filas afectadas: ${result.affectedRows}`,
     );
     return result;
   } catch (err) {
-    console.error("Error eliminando turno:", err.message);
+    console.error('Error eliminando turno:', err.message);
     throw err;
   }
 }
