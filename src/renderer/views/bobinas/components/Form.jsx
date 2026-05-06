@@ -21,23 +21,36 @@ import TextField from '../../../components/common/Textfield';
 import Select from '../../../components/common/Select';
 import { DataContext } from '../../../contexts/DataContext';
 
-const schema = z.object({
-  id: z.number().optional(),
-  fabricante_id: z
-    .number({ invalid_type_error: 'Seleccione un fabricante' })
-    .positive(),
-  calidad_id: z
-    .number({ invalid_type_error: 'Seleccione una calidad' })
-    .positive(),
-  concepto: z.string().min(1, 'El concepto es obligatorio'),
-  art_concepto: z.string().min(1, 'El concepto de artículo es obligatorio'),
-  espesor: z.number().positive('Debe ser mayor a 0'), // Flotante
-  ancho: z.number().positive('Debe ser mayor a 0'), // Flotante
-  peso_medio: z.number().nonnegative(),
-  activa: z.boolean(),
-  art_concepto: z.string().min(1, 'El concepto de artículo es obligatorio'),
-  unidades: z.number().int().positive(), // Entero
-});
+const schema = z
+  .object({
+    id: z.number().optional(),
+    fabricante_id: z.any().optional(),
+    fabricante: z.string().optional(),
+    calidad_id: z
+      .number({ invalid_type_error: 'Seleccione una calidad' })
+      .positive(),
+    concepto: z.string().min(1, 'El concepto es obligatorio'),
+    art_concepto: z.string().min(1, 'El concepto de artículo es obligatorio'),
+    espesor: z.number().positive('Debe ser mayor a 0'), // Flotante
+    ancho: z.number().positive('Debe ser mayor a 0'), // Flotante
+    peso_medio: z.number().nonnegative(),
+    activa: z.boolean(),
+    art_concepto: z.string().min(1, 'El concepto de artículo es obligatorio'),
+    unidades: z.number().int().positive(), // Entero
+  })
+  .superRefine((values, ctx) => {
+    const hasFabricanteId = Number(values?.fabricante_id) > 0;
+    const hasFabricanteNombre =
+      String(values?.fabricante || '').trim().length > 0;
+
+    if (!hasFabricanteId && !hasFabricanteNombre) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['fabricante_id'],
+        message: 'Seleccione un fabricante o escriba uno nuevo',
+      });
+    }
+  });
 
 export const StatusBullet = ({ active }) => (
   <Box
@@ -56,22 +69,52 @@ export const StatusBullet = ({ active }) => (
 
 const BobinaForm = ({ data = null, handleConfirm, handleCancel }) => {
   const { fabricantes, tiposCalidad } = useContext(DataContext);
+  const [useFabricanteInput, setUseFabricanteInput] = useState(false);
   const [openAnomalyDialog, setOpenAnomalyDialog] = useState(false);
   const [pendingFormData, setPendingFormData] = useState(null);
 
+  const normalizeFormData = (formData) => {
+    const normalizedData = {
+      ...formData,
+      fabricante: String(formData?.fabricante || '').trim(),
+      fabricante_id:
+        Number(formData?.fabricante_id) > 0
+          ? Number(formData.fabricante_id)
+          : null,
+    };
+
+    if (normalizedData.fabricante_id) {
+      normalizedData.fabricante = '';
+    }
+
+    return normalizedData;
+  };
+
   const validateAnomaliesAndConfirm = (formData) => {
+    const normalizedData = normalizeFormData(formData);
     const hasAnomalies =
-      Number(formData?.espesor) > 6 ||
-      Number(formData?.ancho) > 2000 ||
-      Number(formData?.peso_medio) > 30000;
+      Number(normalizedData?.espesor) > 6 ||
+      Number(normalizedData?.ancho) > 2000 ||
+      Number(normalizedData?.peso_medio) > 30000;
 
     if (!hasAnomalies) {
-      handleConfirm(formData);
+      handleConfirm(normalizedData);
       return;
     }
 
-    setPendingFormData(formData);
+    setPendingFormData(normalizedData);
     setOpenAnomalyDialog(true);
+  };
+
+  const handleToggleFabricanteMode = () => {
+    const nextMode = !useFabricanteInput;
+    setUseFabricanteInput(nextMode);
+
+    if (nextMode) {
+      methods.setValue('fabricante_id', null);
+    } else {
+      methods.setValue('fabricante', '');
+    }
   };
 
   const handleCloseAnomalyDialog = () => {
@@ -90,14 +133,15 @@ const BobinaForm = ({ data = null, handleConfirm, handleCancel }) => {
     resolver: zodResolver(schema),
     defaultValues: {
       id: data?.id || undefined,
-      fabricante_id: data?.fabricante_id || '',
+      fabricante_id: data?.fabricante_id || null,
+      fabricante: '',
       calidad_id: data?.calidad_id || '',
       concepto: data?.concepto || '',
       art_concepto: data?.art_concepto || '',
       espesor: data?.espesor || 0,
       ancho: data?.ancho || 0,
       peso_medio: data?.peso_medio || 0,
-      activa: data?.activa ?? true,
+      activa: data?.activa ? true : false,
       art_concepto: data?.art_concepto || '',
       unidades: data?.unidades || 1,
     },
@@ -154,16 +198,36 @@ const BobinaForm = ({ data = null, handleConfirm, handleCancel }) => {
 
           <Grid container spacing={2}>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <Select
+              {useFabricanteInput ? (
+                <TextField
+                  size="small"
+                  name="fabricante"
+                  label="Nuevo fabricante"
+                  fullWidth
+                />
+              ) : (
+                <Select
+                  size="small"
+                  name="fabricante_id"
+                  label="Fabricante"
+                  options={fabricantes.map((f) => ({
+                    label: f.nombre,
+                    value: f.id,
+                  }))}
+                  fullWidth
+                />
+              )}
+              <Button
                 size="small"
-                name="fabricante_id"
-                label="Fabricante"
-                options={fabricantes.map((f) => ({
-                  label: f.nombre,
-                  value: f.id,
-                }))}
-                fullWidth
-              />
+                variant="text"
+                sx={{ mt: 1, px: 0 }}
+                onClick={handleToggleFabricanteMode}
+                variant="text"
+              >
+                {useFabricanteInput
+                  ? 'Seleccionar fabricante existente'
+                  : 'No existe? Crear fabricante nuevo'}
+              </Button>
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <Select

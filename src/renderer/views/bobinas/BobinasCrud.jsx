@@ -17,7 +17,7 @@ import { DataContext } from '../../contexts/DataContext';
 import { resolveSortParams } from '../../utils/functions';
 
 const BobinasCrud = () => {
-  const { tiposCalidad } = useContext(DataContext);
+  const { tiposCalidad, handleReloadFabricantes } = useContext(DataContext);
   const [alertDelete, setAlertDelete] = useState(false);
 
   const sortFieldMap = {
@@ -113,6 +113,8 @@ const BobinasCrud = () => {
     handleSelectItems,
     handleFetchData,
   } = useDataTable({
+    handleAfterCreate: handleReloadFabricantes,
+    handleAfterUpdate: handleReloadFabricantes,
     fetchData: loadBobinas,
     fetchFilters: loadFilters,
     onDeleteConfirm: onDelete,
@@ -123,7 +125,6 @@ const BobinasCrud = () => {
 
   const onCancel = async () => {
     if (selectedItem) {
-      console.log('Marking bobina as inactive:', selectedItem);
       const payload = { ...selectedItem };
       delete payload.fabricante;
       delete payload.calidad;

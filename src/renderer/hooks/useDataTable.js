@@ -11,6 +11,8 @@ const useDataTable = ({
   onCreateConfirm = async () => {},
   onEditConfirm = async () => {},
   onOtherAction = async () => {},
+  handleAfterUpdate = async () => {},
+  handleAfterCreate = async () => {},
   successActionMessage = 'Acción realizada correctamente',
 }) => {
   const [reinitFilters, setReinitFilters] = useState(false);
@@ -114,6 +116,7 @@ const useDataTable = ({
       toast.success('Elemento creado correctamente.');
       await loadData(page, searchTerm, filters);
       setInitFilters();
+      await handleAfterCreate();
     } catch (error) {
       setActionLoading(false);
       toast.error(
@@ -133,12 +136,13 @@ const useDataTable = ({
       toast.success('Elemento actualizado correctamente.');
       await loadData(page, searchTerm, filters);
       setInitFilters();
+      await handleAfterUpdate();
     } catch (error) {
       setActionLoading(false);
       toast.error(
         error?.message ? error?.message : 'Error al actualizar el elemento.',
       );
-      console.error('Error creating item:', error);
+      console.error('Error updating item:', error);
     }
   };
 

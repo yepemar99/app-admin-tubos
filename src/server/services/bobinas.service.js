@@ -199,9 +199,13 @@ export async function crearBobinaService({
   activa = true,
   calidad_id,
   fabricante_id,
+  fabricante,
 }) {
   try {
     const conn = database.getConnection();
+    let resolvedFabricanteId =
+      Number(fabricante_id) > 0 ? Number(fabricante_id) : null;
+    const fabricanteNombre = String(fabricante || '').trim();
 
     if (!concepto || !art_concepto) {
       throw new Error(
@@ -221,6 +225,42 @@ export async function crearBobinaService({
       );
     }
 
+    if (!resolvedFabricanteId && !fabricanteNombre) {
+      throw new Error(
+        'Debe seleccionar un fabricante existente o indicar un fabricante nuevo.',
+      );
+    }
+
+    if (!resolvedFabricanteId && fabricanteNombre) {
+      const fabricanteExistenteQuery = `
+        SELECT TOP 1 id
+        FROM Fabricantes
+        WHERE LTRIM(RTRIM(nombre)) = LTRIM(RTRIM(?))
+      `;
+      const fabricanteExistente = await conn.query(fabricanteExistenteQuery, [
+        fabricanteNombre,
+      ]);
+
+      if (fabricanteExistente?.[0]?.id) {
+        resolvedFabricanteId = Number(fabricanteExistente[0].id);
+      } else {
+        const insertFabricanteQuery = `
+          INSERT INTO Fabricantes (nombre)
+          OUTPUT INSERTED.id AS id
+          VALUES (?)
+        `;
+        const insertFabricanteResult = await conn.query(insertFabricanteQuery, [
+          fabricanteNombre,
+        ]);
+
+        resolvedFabricanteId = Number(insertFabricanteResult?.[0]?.id);
+
+        if (!resolvedFabricanteId) {
+          throw new Error('No se pudo crear el fabricante.');
+        }
+      }
+    }
+
     const insertQuery = `
       INSERT INTO Bobinas 
       (concepto, art_concepto, unidades, espesor, ancho, peso_medio, activa, calidad_id, fabricante_id)
@@ -235,7 +275,7 @@ export async function crearBobinaService({
       peso_medio,
       activa ? 1 : 0,
       calidad_id || null,
-      fabricante_id || null,
+      resolvedFabricanteId || null,
     ]);
 
     return { data: result };
@@ -248,10 +288,21 @@ export async function crearBobinaService({
 export async function actualizarBobinaService({ id, bobina } = {}) {
   try {
     const conn = database.getConnection();
+    const payloadToUpdate = { ...bobina };
     const fields = [];
     const values = [];
-
-    console.log('Updating bobina with id:', id, 'and data:', bobina);
+    const updatableFields = new Set([
+      'concepto',
+      'art_concepto',
+      'unidades',
+      'espesor',
+      'ancho',
+      'peso_medio',
+      'activa',
+      'calidad_id',
+      'fabricante_id',
+      'plan_id',
+    ]);
 
     if (!id) {
       throw new Error(
@@ -262,11 +313,62 @@ export async function actualizarBobinaService({ id, bobina } = {}) {
     if (!bobina || typeof bobina !== 'object') {
       throw new Error("El campo 'bobina' es obligatorio y debe ser un objeto.");
     }
-    for (const [key, value] of Object.entries(bobina)) {
-      if (key.toLowerCase() !== 'id') {
-        fields.push(`${key} = ?`);
-        values.push(value);
+
+    let resolvedFabricanteId =
+      Number(payloadToUpdate?.fabricante_id) > 0
+        ? Number(payloadToUpdate.fabricante_id)
+        : null;
+    const fabricanteNombre = String(payloadToUpdate?.fabricante || '').trim();
+
+    if (!resolvedFabricanteId && fabricanteNombre) {
+      const fabricanteExistenteQuery = `
+        SELECT TOP 1 id
+        FROM Fabricantes
+        WHERE LTRIM(RTRIM(nombre)) = LTRIM(RTRIM(?))
+      `;
+      const fabricanteExistente = await conn.query(fabricanteExistenteQuery, [
+        fabricanteNombre,
+      ]);
+
+      if (fabricanteExistente?.[0]?.id) {
+        resolvedFabricanteId = Number(fabricanteExistente[0].id);
+      } else {
+        const insertFabricanteQuery = `
+          INSERT INTO Fabricantes (nombre)
+          OUTPUT INSERTED.id AS id
+          VALUES (?)
+        `;
+        const insertFabricanteResult = await conn.query(insertFabricanteQuery, [
+          fabricanteNombre,
+        ]);
+
+        resolvedFabricanteId = Number(insertFabricanteResult?.[0]?.id);
+
+        if (!resolvedFabricanteId) {
+          throw new Error('No se pudo crear el fabricante.');
+        }
       }
+    }
+
+    if (resolvedFabricanteId) {
+      payloadToUpdate.fabricante_id = resolvedFabricanteId;
+    }
+
+    delete payloadToUpdate.fabricante;
+    delete payloadToUpdate.fabricante_nombre;
+    delete payloadToUpdate.calidad;
+    delete payloadToUpdate.calidad_nombre;
+
+    for (const [key, value] of Object.entries(payloadToUpdate)) {
+      if (key.toLowerCase() !== 'id' && updatableFields.has(key)) {
+        const normalizedValue = key === 'activa' ? (value ? 1 : 0) : value;
+        fields.push(`${key} = ?`);
+        values.push(normalizedValue);
+      }
+    }
+
+    if (fields.length === 0) {
+      throw new Error('No hay campos válidos para actualizar la bobina.');
     }
 
     values.push(id);
@@ -276,9 +378,9 @@ export async function actualizarBobinaService({ id, bobina } = {}) {
     SET ${fields.join(', ')}
     WHERE id = ?
   `;
-    console.log('Executing update query:', updateQuery, 'with values:', values);
+
     await conn.query(updateQuery, values);
-    return { data: { id, ...bobina } };
+    return { data: { id, ...payloadToUpdate } };
   } catch (error) {
     console.error('Error actualizando bobina:', error.message);
     throw error;
@@ -360,7 +462,6 @@ export async function listarBobinasCortadasService({
       OFFSET ${offset} ROWS FETCH NEXT ${safePageSize} ROWS ONLY
     `;
 
-    console.log('Executing query:', selectQuery);
     const rows = await conn.query(selectQuery);
 
     return {

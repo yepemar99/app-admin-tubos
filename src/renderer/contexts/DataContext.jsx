@@ -1,4 +1,4 @@
-import React, { createContext, useEffect, useState } from "react";
+import React, { createContext, useEffect, useState } from 'react';
 
 export const DataContext = createContext();
 
@@ -66,6 +66,11 @@ export function DataProvider({ children }) {
     };
   };
 
+  const handleReloadFabricantes = async () => {
+    const result = await loadFabricantes();
+    setFabricantes(result.data);
+  };
+
   const loadData = async () => {
     try {
       const resultTiposCalidad = await loadTiposCalidad();
@@ -95,6 +100,7 @@ export function DataProvider({ children }) {
         loading,
         fabricantes,
         setFabricantes,
+        handleReloadFabricantes,
         tiposCalidad,
         setTiposCalidad,
         tiposTubos,
