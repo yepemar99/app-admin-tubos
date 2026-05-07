@@ -115,7 +115,7 @@ const buildMedidaTubo = ({
   }
 
   let medida = `${base}${sufijoCalidad}`.trim();
-  if (Number(longitud) > 0 && Number(longitud) !== 6) {
+  if (Number(longitud) > 0 && Number(longitud) !== 6000) {
     medida = `${medida} L${longitudTxt}m`;
   }
 
@@ -205,7 +205,7 @@ const TuboForm = ({ data = null, handleConfirm, handleCancel }) => {
   useEffect(() => {
     const active = document.activeElement?.getAttribute('name');
     if (active === 'peso_unitario' || active === 'longitud') {
-      const total = watchPesoUnitario * watchLongitud;
+      const total = watchPesoUnitario * (watchLongitud / 1000);
       setValue('peso_total', parseFloat(total.toFixed(3)));
     }
   }, [watchPesoUnitario, watchLongitud, setValue]);
@@ -213,7 +213,7 @@ const TuboForm = ({ data = null, handleConfirm, handleCancel }) => {
   useEffect(() => {
     const active = document.activeElement?.getAttribute('name');
     if (active === 'peso_total' && watchLongitud > 0) {
-      const unitario = watchPesoTotal / watchLongitud;
+      const unitario = watchPesoTotal / (watchLongitud / 1000);
       setValue('peso_unitario', parseFloat(unitario.toFixed(3)));
     }
   }, [watchPesoTotal, watchLongitud, setValue]);
@@ -462,7 +462,7 @@ const TuboForm = ({ data = null, handleConfirm, handleCancel }) => {
                   <TextField
                     size="small"
                     name="espesor"
-                    label="Espesor"
+                    label="Espesor (mm)"
                     type="number"
                   />
                 </Grid>
@@ -470,7 +470,7 @@ const TuboForm = ({ data = null, handleConfirm, handleCancel }) => {
                   <TextField
                     size="small"
                     name="longitud"
-                    label="Longitud (m)"
+                    label="Longitud (mm)"
                     type="number"
                   />
                 </Grid>
@@ -481,7 +481,7 @@ const TuboForm = ({ data = null, handleConfirm, handleCancel }) => {
                     <TextField
                       size="small"
                       name="diametro"
-                      label="Diámetro"
+                      label="Diámetro (mm)"
                       type="number"
                     />
                   </Grid>
@@ -491,7 +491,7 @@ const TuboForm = ({ data = null, handleConfirm, handleCancel }) => {
                       <TextField
                         size="small"
                         name="alto"
-                        label="Alto / Lado"
+                        label={watchTipo === 2 ? 'Alto (mm)' : 'Lado (mm)'}
                         type="number"
                       />
                     </Grid>
@@ -500,7 +500,7 @@ const TuboForm = ({ data = null, handleConfirm, handleCancel }) => {
                         <TextField
                           size="small"
                           name="ancho"
-                          label="Ancho"
+                          label="Ancho (mm)"
                           type="number"
                         />
                       </Grid>
