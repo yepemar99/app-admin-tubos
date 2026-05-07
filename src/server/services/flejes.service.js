@@ -3,6 +3,7 @@ import { app, BrowserWindow } from 'electron';
 import fs from 'fs';
 import pathModule from 'path';
 import { ROWS_PER_PAGE_TEMPLATE } from '../utils/constants';
+import { orderQuery } from '../../utils/functions';
 
 function escapeHtml(value = '') {
   return String(value)
@@ -136,7 +137,17 @@ export async function listarFlejesService({
       creado: 'b.creado',
     };
 
-    const safeOrderBy = allowedOrderBy[String(orderBy)] || 'b.id';
+    const hasFilters = Boolean(
+      searchTerm ||
+      (calidad_id && calidad_id !== 0) ||
+      (activo !== undefined && activo !== null),
+    );
+
+    const safeOrderBy = orderBy
+      ? allowedOrderBy[String(orderBy)]
+      : !hasFilters
+        ? 'b.id'
+        : '';
     const safeOrderDir =
       String(orderDir).toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
 
@@ -164,26 +175,11 @@ export async function listarFlejesService({
     const countResult = await conn.query(countQuery);
     const total = countResult[0]?.total ? Number(countResult[0].total) : 0;
 
-    const hasFilters = Boolean(
-      searchTerm ||
-      (calidad_id && calidad_id !== 0) ||
-      (activo !== undefined && activo !== null),
-    );
-
-    let orderBySQL;
-    if (!hasFilters && safeOrderBy === 'b.id') {
-      orderBySQL = `id DESC`;
-    } else {
-      const secondaryOrderCols = ['tc.nombre', 'b.espesor', 'b.ancho', 'b.id'];
-      const orderParts = [];
-      orderParts.push(`${safeOrderBy} ${safeOrderDir}`);
-      for (const col of secondaryOrderCols) {
-        if (col !== safeOrderBy && !orderParts.some((p) => p.startsWith(col))) {
-          orderParts.push(`${col} ${safeOrderDir}`);
-        }
-      }
-      orderBySQL = orderParts.join(', ');
-    }
+    let orderBySQL = orderQuery({
+      secondaryOrderCols: ['tc.nombre', 'b.espesor', 'b.ancho', 'b.id'],
+      safeOrderBy,
+      safeOrderDir,
+    });
 
     const selectQuery = `
     WITH FlejesCTE AS (
@@ -211,6 +207,8 @@ export async function listarFlejesService({
     ORDER BY ${orderBySQL}
     OFFSET ${offset} ROWS FETCH NEXT ${safePageSize} ROWS ONLY
   `;
+
+    console.log('Ejecutando consulta listarBobinasService:', selectQuery);
 
     const rows = await conn.query(selectQuery);
 

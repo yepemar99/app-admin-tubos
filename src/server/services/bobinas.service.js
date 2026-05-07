@@ -3,6 +3,7 @@ import { app, BrowserWindow } from 'electron';
 import fs from 'fs';
 import pathModule from 'path';
 import { ROWS_PER_PAGE_TEMPLATE } from '../utils/constants';
+import { orderQuery } from '../../utils/functions';
 
 function escapeHtml(value = '') {
   return String(value)
@@ -83,7 +84,18 @@ export async function listarBobinasService({
       creado: 'b.creado',
     };
 
-    const safeOrderBy = allowedOrderBy[String(orderBy)] || 'b.creado';
+    const hasFilters = Boolean(
+      searchTerm ||
+      (calidad_id && Number(calidad_id) !== 0) ||
+      (plan_id && Number(plan_id) !== 0) ||
+      (activo !== undefined && activo !== null),
+    );
+
+    const safeOrderBy = orderBy
+      ? allowedOrderBy[String(orderBy)]
+      : !hasFilters
+        ? 'b.id'
+        : '';
     const safeOrderDir =
       String(orderDir).toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
 
@@ -112,27 +124,11 @@ export async function listarBobinasService({
     const countResult = await conn.query(countQuery);
     const total = countResult[0]?.total ? Number(countResult[0].total) : 0;
 
-    const hasFilters = Boolean(
-      searchTerm ||
-      (calidad_id && calidad_id !== 0) ||
-      (activo !== undefined && activo !== null) ||
-      (plan_id && plan_id !== 0),
-    );
-
-    let orderBySQL;
-    if (!hasFilters && safeOrderBy === 'b.id') {
-      orderBySQL = `id DESC`;
-    } else {
-      const secondaryOrderCols = ['tc.nombre', 'b.concepto', 'b.id'];
-      const orderParts = [];
-      orderParts.push(`${safeOrderBy} ${safeOrderDir}`);
-      for (const col of secondaryOrderCols) {
-        if (col !== safeOrderBy && !orderParts.some((p) => p.startsWith(col))) {
-          orderParts.push(`${col} ${safeOrderDir}`);
-        }
-      }
-      orderBySQL = orderParts.join(', ');
-    }
+    let orderBySQL = orderQuery({
+      secondaryOrderCols: ['tc.nombre', 'b.concepto', 'b.id'],
+      safeOrderBy,
+      safeOrderDir,
+    });
 
     const selectQuery = `
     WITH BobinasCTE AS (

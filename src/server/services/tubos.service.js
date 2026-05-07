@@ -3,6 +3,7 @@ import { app, BrowserWindow } from 'electron';
 import fs from 'fs';
 import pathModule from 'path';
 import { ROWS_PER_PAGE_TEMPLATE } from '../utils/constants';
+import { orderQuery } from '../../utils/functions';
 
 function escapeHtml(value = '') {
   return String(value)
@@ -132,8 +133,8 @@ export async function listarTiposTubosService() {
 export async function listarTubosService({
   page = 1,
   pageSize = 20,
-  orderBy = 'id',
-  orderDir = 'DESC',
+  orderBy,
+  orderDir,
   calidad_id,
   tipo_id,
   maquina_id,
@@ -162,7 +163,20 @@ export async function listarTubosService({
       creado: 't.creado',
     };
 
-    const safeOrderBy = allowedOrderBy[String(orderBy)] || 't.creado';
+    const hasFilters = Boolean(
+      searchTerm ||
+      (tubo_id && Number(tubo_id) !== 0) ||
+      (calidad_id && Number(calidad_id) !== 0) ||
+      (tipo_id && Number(tipo_id) !== 0) ||
+      (maquina_id && Number(maquina_id) !== 0) ||
+      (activo !== undefined && activo !== null),
+    );
+
+    const safeOrderBy = orderBy
+      ? allowedOrderBy[String(orderBy)]
+      : !hasFilters
+        ? 't.id'
+        : '';
     const safeOrderDir =
       String(orderDir).toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
 
@@ -207,6 +221,20 @@ export async function listarTubosService({
     const countResult = await conn.query(countQuery);
     const total = countResult[0]?.total ? Number(countResult[0].total) : 0;
 
+    let orderBySQL = orderQuery({
+      secondaryOrderCols: [
+        'tc.nombre',
+        't.espesor',
+        'tt.nombre',
+        't.ancho',
+        't.alto',
+        't.diametro',
+        't.id',
+      ],
+      safeOrderBy,
+      safeOrderDir,
+    });
+
     const selectQuery = `
       SELECT
         t.*,
@@ -228,7 +256,7 @@ export async function listarTubosService({
         WHERE tm.tubo_id = t.id
       ) tm_rel
       WHERE ${whereSQL}
-      ORDER BY ${safeOrderBy} ${safeOrderDir}
+      ORDER BY ${orderBySQL}
       OFFSET ${offset} ROWS FETCH NEXT ${safePageSize} ROWS ONLY
     `;
 

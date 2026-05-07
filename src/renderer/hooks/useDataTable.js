@@ -30,11 +30,10 @@ const useDataTable = ({
   const [showForm, setShowForm] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const [selectedIds, setSelectedIds] = useState([]);
-  const [sortModel, setSortModel] = useState([
-    { field: 'creado', sort: 'desc' },
-  ]);
+  const [sortModel, setSortModel] = useState([{ field: 'id', sort: 'desc' }]);
 
   const handleSortModel = (model) => {
+    console.log('Nuevo sort model:', model);
     setSortModel(model);
   };
 
@@ -210,6 +209,7 @@ const useDataTable = ({
       return filter;
     });
     setFilteredMallas(newFilters);
+    setSortModel([]);
   };
 
   const handleClearAllFilters = () => {

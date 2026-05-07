@@ -69,9 +69,9 @@ export const formatearFechaCorta = (fecha) => {
 };
 
 export const resolveSortParams = (model = [], sortFieldMap) => {
-  const currentSort = model[0];
-  const safeField = currentSort?.field || 'creado';
-  const mappedField = sortFieldMap[safeField] || safeField;
+  const currentSort = model?.[0];
+  const safeField = currentSort?.field || '';
+  const mappedField = sortFieldMap[safeField] || '';
   const safeDir = currentSort?.sort === 'asc' ? 'ASC' : 'DESC';
 
   return {

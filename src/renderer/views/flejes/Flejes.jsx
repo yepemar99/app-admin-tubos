@@ -31,13 +31,14 @@ const Flejes = () => {
     sortModel,
   ) => {
     const { orderBy, orderDir } = resolveSortParams(sortModel, sortFieldMap);
+    const hasFilters = searchTerm || filters.some((f) => f.value);
     return await window.api.flejes.getAll({
       page,
       pageSize,
       searchTerm,
       calidad_id: filters.find((f) => f.name === 'calidad')?.value || 0,
       orderBy,
-      orderDir,
+      orderDir: orderBy ? orderDir : hasFilters ? 'ASC' : 'DESC',
     });
   };
 

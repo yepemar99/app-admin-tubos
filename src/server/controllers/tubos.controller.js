@@ -26,8 +26,8 @@ const tubosController = {
       const result = await listarTubosService({
         page: Number(page) || 1,
         pageSize: Number(pageSize) || 20,
-        orderBy: orderBy || 'creado',
-        orderDir: orderDir || 'DESC',
+        orderBy: orderBy || '',
+        orderDir: orderDir || '',
         calidad_id: calidad_id ? Number(calidad_id) : undefined,
         tipo_id: tipo_id ? Number(tipo_id) : undefined,
         maquina_id: maquina_id ? Number(maquina_id) : undefined,

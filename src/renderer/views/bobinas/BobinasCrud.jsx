@@ -23,6 +23,7 @@ const BobinasCrud = () => {
   const sortFieldMap = {
     Calidad: 'calidad',
     Unidades: 'unidades',
+    peso_medio: 'peso_medio',
   };
 
   const loadBobinas = async (
@@ -34,13 +35,14 @@ const BobinasCrud = () => {
   ) => {
     const calidadFilter = filters.find((f) => f.name === 'calidad');
     const { orderBy, orderDir } = resolveSortParams(sortModel, sortFieldMap);
+    const hasFilters = searchTerm || filters.some((f) => f.value);
     return await window.api.bobinas.getAll({
       page,
       pageSize,
       searchTerm,
       calidad_id: calidadFilter?.value || 0,
       orderBy,
-      orderDir,
+      orderDir: orderBy ? orderDir : hasFilters ? 'ASC' : 'DESC',
     });
   };
 

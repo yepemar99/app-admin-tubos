@@ -34,6 +34,10 @@ const Tubos = () => {
     sortModel,
   ) => {
     const { orderBy, orderDir } = resolveSortParams(sortModel, sortFieldMap);
+    const hasFilters =
+      searchTerm ||
+      filters.find((f) => f.name === 'calidad')?.value ||
+      filters.find((f) => f.name === 'tipo')?.value;
     return await window.api.tubos.getAll({
       page,
       pageSize,
@@ -41,12 +45,11 @@ const Tubos = () => {
       calidad_id: filters.find((f) => f.name === 'calidad')?.value || 0,
       tipo_id: filters.find((f) => f.name === 'tipo')?.value || 0,
       orderBy,
-      orderDir,
+      orderDir: orderBy ? orderDir : hasFilters ? 'ASC' : 'DESC',
     });
   };
 
   const onCreateConfirm = async (data) => {
-    console.log('Creando tubo con data:', data);
     return await window.api.tubos.create(data);
   };
 

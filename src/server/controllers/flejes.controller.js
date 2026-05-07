@@ -40,8 +40,8 @@ const flejesController = {
         page: Number(page) || 1,
         pageSize: Number(pageSize) || 20,
         searchTerm: payload.searchTerm || '',
-        orderBy: orderBy || 'creado',
-        orderDir: orderDir || 'DESC',
+        orderBy: orderBy || '',
+        orderDir: orderDir || '',
         calidad_id: calidad_id ? Number(calidad_id) : undefined,
         activo:
           activo !== undefined
