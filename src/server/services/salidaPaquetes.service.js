@@ -221,7 +221,7 @@ export const informeSalidasPaquetes = async ({
       SELECT
         s.tubo_id,
         t.medida AS medida,
-        t.peso_medio AS peso_medio,
+        t.peso_unitario AS peso_medio,
         t.calidad_id AS calidad_id,
         tc.nombre AS calidad_nombre,
         SUM(s.num_paqs) AS paquetes_sum
@@ -229,7 +229,7 @@ export const informeSalidasPaquetes = async ({
       LEFT JOIN Tubos t ON s.tubo_id = t.id
       LEFT JOIN Tipos_Calidad tc ON t.calidad_id = tc.id
       WHERE ${whereSQL}
-      GROUP BY s.tubo_id, t.medida, t.peso_medio, t.calidad_id, tc.nombre
+      GROUP BY s.tubo_id, t.medida, t.peso_unitario, t.calidad_id, tc.nombre
       ORDER BY tc.nombre ASC, t.medida ASC
     `;
 

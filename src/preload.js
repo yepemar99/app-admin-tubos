@@ -59,6 +59,7 @@ contextBridge.exposeInMainWorld('api', {
     create: (payload) => ipcRenderer.invoke('salidasPaqs:create', payload),
     update: (payload) => ipcRenderer.invoke('salidasPaqs:update', payload),
     delete: (payload) => ipcRenderer.invoke('salidasPaqs:delete', payload),
+    report: (payload) => ipcRenderer.invoke('salidasPaqs:report', payload),
   },
   operarios: {
     getAll: () => ipcRenderer.invoke('operarios:getAll'),

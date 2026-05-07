@@ -2,8 +2,9 @@ import {
   actualizarSalidaPaquetes,
   crearSalidaPaquetes,
   eliminarSalidaPaquetes,
+  informeSalidasPaquetesReport,
   listarSalidaPaquetes,
-} from "../services/salidaPaquetes.service";
+} from '../services/salidaPaquetes.service';
 
 const salidaPaquetesController = {
   getAll: async (_, payload) => {
@@ -11,7 +12,7 @@ const salidaPaquetesController = {
       const result = await listarSalidaPaquetes(payload);
       return { success: true, data: result.data, total: result.total };
     } catch (error) {
-      console.error("Error en salidaPaquetesController.getAll:", error);
+      console.error('Error en salidaPaquetesController.getAll:', error);
       return { success: false, error: error.message };
     }
   },
@@ -21,7 +22,7 @@ const salidaPaquetesController = {
       const result = await crearSalidaPaquetes(payload);
       return { success: true, data: result.data };
     } catch (error) {
-      console.error("Error en salidaPaquetesController.create:", error);
+      console.error('Error en salidaPaquetesController.create:', error);
       return { success: false, error: error.message };
     }
   },
@@ -31,7 +32,7 @@ const salidaPaquetesController = {
       const result = await actualizarSalidaPaquetes(payload);
       return { success: true, data: result.data };
     } catch (error) {
-      console.error("Error en salidaPaquetesController.update:", error);
+      console.error('Error en salidaPaquetesController.update:', error);
       return { success: false, error: error.message };
     }
   },
@@ -41,7 +42,17 @@ const salidaPaquetesController = {
       const result = await eliminarSalidaPaquetes(payload.id);
       return { success: true, data: result.data };
     } catch (error) {
-      console.error("Error en salidaPaquetesController.delete:", error);
+      console.error('Error en salidaPaquetesController.delete:', error);
+      return { success: false, error: error.message };
+    }
+  },
+
+  report: async (_, payload) => {
+    try {
+      const result = await informeSalidasPaquetesReport(payload, true); // true para indicar que es un reporte
+      return { success: true, data: result.data, total: result.total };
+    } catch (error) {
+      console.error('Error en salidaPaquetesController.report:', error);
       return { success: false, error: error.message };
     }
   },

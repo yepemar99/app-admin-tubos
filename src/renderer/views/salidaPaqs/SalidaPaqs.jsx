@@ -10,6 +10,7 @@ import SalidasPaqsTable from './components/Table';
 import SalidaPaqsModal from './components/Modal';
 import DataFilters from '../../components/common/DataFilters';
 import { initFilters } from './utils';
+import InformePaqs from '../tubos/components/Informe';
 
 const SalidaPaqs = () => {
   const loadSalidasPaqs = async (
@@ -90,6 +91,21 @@ const SalidaPaqs = () => {
     initFilters: initFilters,
   });
 
+  const generarInforme = async ({ fechaInicial, fechaFinal }) => {
+    try {
+      const result = await window.api.actions.selectDirectory();
+      const response = await window.api.salidasPaqs.report({
+        path: result.path,
+        tubo_ids: [],
+        fechaInicial,
+        fechaFinal,
+      });
+      toast.success(`Inventario generado exitosamente.`);
+    } catch (error) {
+      console.error('Error al seleccionar directorio:', error);
+    }
+  };
+
   return (
     <Box sx={{ width: '100%' }}>
       <LoadingModal open={actionLoading} />
@@ -122,6 +138,7 @@ const SalidaPaqs = () => {
         sx={{ mb: 2 }}
         actions={
           <Box sx={flex}>
+            <InformePaqs onGenerate={generarInforme} />
             <Button
               size="small"
               variant="contained"
