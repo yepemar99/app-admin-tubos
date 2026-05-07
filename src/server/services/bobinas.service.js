@@ -501,19 +501,32 @@ export async function informeBobinas({ path: destinationPath, ids } = {}) {
         whereClauses.push(`b.id IN (${idsList.join(',')})`);
       }
     }
+    whereClauses.push(`b.activa = 1`);
+    whereClauses.push(`b.unidades > 0`);
+
+    let orderBySQL = orderQuery({
+      secondaryOrderCols: ['tc.nombre', 'b.concepto', 'b.id'],
+      safeOrderBy: 'tc.nombre',
+      safeOrderDir: 'ASC',
+    });
 
     const query = `
       SELECT 
+        b.calidad_id,
         b.concepto, 
         b.unidades, 
-        b.peso_medio
+        b.peso_medio,
+        tc.nombre AS calidad_nombre
       FROM Bobinas b
+      LEFT JOIN Tipos_Calidad tc ON b.calidad_id = tc.id
       WHERE ${whereClauses.join(' AND ')}
-      ORDER BY b.creado DESC
+      ORDER BY ${orderBySQL}
     `;
 
     const rows = await conn.query(query);
     const reportRows = rows.map((row) => ({
+      calidad_id: Number(row.calidad_id),
+      calidad: row.calidad_nombre || 'N/A',
       concepto: row.concepto,
       unidades: Number(row.unidades),
       peso: Number(row.unidades) * Number(row.peso_medio),
@@ -538,15 +551,89 @@ export async function informeBobinas({ path: destinationPath, ids } = {}) {
       year: 'numeric',
     });
 
-    const safeRows = reportRows.length
-      ? reportRows
-      : [{ concepto: 'Sin datos', unidades: 0, peso: 0 }];
+    // Agrupar por calidad_id y añadir encabezado y subtotal por grupo
+    let safeRows;
+    if (reportRows.length) {
+      const groups = new Map();
+      for (const r of reportRows) {
+        const key = r.calidad_id != null ? String(r.calidad_id) : '__null__';
+        if (!groups.has(key)) {
+          groups.set(key, { calidad: r.calidad || 'N/A', rows: [] });
+        }
+        groups.get(key).rows.push(r);
+      }
+
+      safeRows = [];
+      for (const [, group] of groups) {
+        safeRows.push({
+          isQualityHeader: true,
+          calidad: group.calidad,
+        });
+
+        for (const r of group.rows) {
+          safeRows.push(r);
+        }
+
+        const subtotalUnidades = group.rows.reduce(
+          (acc, row) => acc + Number(row.unidades || 0),
+          0,
+        );
+        const subtotalPeso = group.rows.reduce(
+          (acc, row) => acc + Number(row.peso || 0),
+          0,
+        );
+
+        safeRows.push({
+          isSubtotal: true,
+          calidad: group.calidad,
+          concepto: '',
+          unidades: subtotalUnidades,
+          peso: subtotalPeso,
+        });
+      }
+    } else {
+      safeRows = [
+        {
+          isQualityHeader: true,
+          calidad: 'Sin datos',
+        },
+        {
+          calidad: 'Sin datos',
+          concepto: '-',
+          unidades: 0,
+          peso: 0,
+        },
+      ];
+    }
     const rowsPerPage = ROWS_PER_PAGE_TEMPLATE;
 
+    const pageBreakSlack = 2;
     const pages = [];
-    for (let i = 0; i < safeRows.length; i += rowsPerPage) {
-      pages.push(safeRows.slice(i, i + rowsPerPage));
+    let currentPage = [];
+    let currentWeight = 0;
+
+    for (const row of safeRows) {
+      let rowWeight = 1;
+      if (row.isSubtotal) {
+        rowWeight = 1;
+      } else if (row.isQualityHeader) {
+        rowWeight = 1;
+      }
+
+      if (currentWeight + rowWeight > rowsPerPage && currentPage.length > 0) {
+        pages.push(currentPage);
+        currentPage = [];
+        currentWeight = 0;
+      }
+
+      currentPage.push(row);
+      currentWeight += rowWeight;
     }
+
+    if (currentPage.length > 0) {
+      pages.push(currentPage);
+    }
+
     const totalPages = Math.max(1, pages.length);
 
     let html = fs.readFileSync(templatePath, 'utf-8');
@@ -554,14 +641,38 @@ export async function informeBobinas({ path: destinationPath, ids } = {}) {
     const pagesHtml = pages
       .map((pageRows, pageIndex) => {
         const rowsHtml = pageRows
-          .map(
-            (row) => `
+          .map((row) => {
+            if (row.isQualityHeader) {
+              return `
+        <tr class="quality-header-row">
+          <td colspan="3" style="font-size: 13px; font-style: italic; font-weight: 700; border-bottom: 1px solid #000080; color: #000080;">
+            Calidad: ${escapeHtml(row.calidad)}
+          </td>
+        </tr>`;
+            }
+
+            if (row.isSubtotal) {
+              return `
+        <tr class="subtotal-spacer">
+          <td colspan="3" style="height: 6px; padding: 0; border: none;"></td>
+        </tr>
+        <tr class="subtotal-row" style="font-weight:700; background:#f4f4f4;">
+          <td class="text-left" >Subtotal de ${escapeHtml(row.calidad)}</td>
+          <td class="text-right" >${row.unidades}</td>
+          <td class="text-right" >${formatPeso(row.peso)}</td>
+        </tr>
+        <tr class="subtotal-spacer">
+          <td colspan="3" style="height: 6px; padding: 0; border: none;"></td>
+        </tr>`;
+            }
+
+            return `
         <tr>
-          <td>${escapeHtml(row.concepto)}</td>
+          <td class="text-left">${escapeHtml(row.concepto)}</td>
           <td class="text-right">${row.unidades}</td>
           <td class="text-right">${formatPeso(row.peso)}</td>
-        </tr>`,
-          )
+        </tr>`;
+          })
           .join('');
 
         const showTotals = pageIndex === totalPages - 1;
@@ -579,9 +690,9 @@ export async function informeBobinas({ path: destinationPath, ids } = {}) {
         <table style="margin-bottom: 14px;">
           <thead>
             <tr>
-              <th class="text-left">Concepto</th>
-              <th class="text-right">Unidades</th>
-              <th class="text-right">Peso (Tn)</th>
+              <th class="text-left" style="width: 60%">Concepto</th>
+              <th class="text-right" style="width: 20%">Unidades</th>
+              <th class="text-right" style="width: 20%">Peso (Tn)</th>
             </tr>
           </thead>
           <tbody>
@@ -591,13 +702,13 @@ export async function informeBobinas({ path: destinationPath, ids } = {}) {
 
         ${
           showTotals
-            ? `<div class="grand-total">\n          <span>Suma total de bobinas en Dos Hermanas</span>\n          <div style="display: flex; gap: 50px">\n            <span>${totalUnidades}</span>\n            <span>${formatPeso(totalPeso)}</span>\n          </div>\n        </div>`
+            ? `<div class="grand-total">\n          <span>Suma total de bobinas en Dos Hermanas</span>\n          <div class="grand-total-values">\n            <span>${totalUnidades}</span>\n            <span>${formatPeso(totalPeso)}</span>\n          </div>\n        </div>`
             : ''
         }
 
-        <div class="report-footer" style="margin-top: auto; display: flex; justify-content: space-between; font-size: 12px; font-style: italic; border-top: 1px solid #ccc; padding-top: 5px;">
+        <div class="footer" style="position: static; margin-top: auto;">
           <span>${escapeHtml(fechaFooter)}</span>
-          <span>Pagina ${pageIndex + 1} de ${totalPages}</span>
+          <span>Página ${pageIndex + 1} de ${totalPages}</span>
         </div>
       </section>`;
       })

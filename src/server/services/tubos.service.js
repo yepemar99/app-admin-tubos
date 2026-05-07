@@ -261,6 +261,8 @@ export async function listarTubosService({
       OFFSET ${offset} ROWS FETCH NEXT ${safePageSize} ROWS ONLY
     `;
 
+    console.log('Consulta SQL listarTubosService:', selectQuery);
+
     const rows = await conn.query(selectQuery);
 
     return {
@@ -735,11 +737,38 @@ export async function informeTubos({ path: destinationPath, ids } = {}) {
       ];
     }
     const rowsPerPage = ROWS_PER_PAGE_TEMPLATE;
+    const pageBreakSlack = 2;
 
+    // Paginar contando el peso visual de cada fila
+    // isQualityHeader = 1 línea, fila normal = 1 línea, isSubtotal = 3 líneas (espaciador + fila + espaciador)
     const pages = [];
-    for (let i = 0; i < safeRows.length; i += rowsPerPage) {
-      pages.push(safeRows.slice(i, i + rowsPerPage));
+    let currentPage = [];
+    let currentWeight = 0;
+
+    for (const row of safeRows) {
+      let rowWeight = 1; // por defecto
+      if (row.isSubtotal) {
+        rowWeight = 1; // subtotal genera 3 filas HTML
+      } else if (row.isQualityHeader) {
+        rowWeight = 1;
+      }
+
+      // Si agregar esta fila excedería el límite, comenzar nueva página
+      if (currentWeight + rowWeight > rowsPerPage && currentPage.length > 0) {
+        pages.push(currentPage);
+        currentPage = [];
+        currentWeight = 0;
+      }
+
+      currentPage.push(row);
+      currentWeight += rowWeight;
     }
+
+    // Agregar la última página si tiene contenido
+    if (currentPage.length > 0) {
+      pages.push(currentPage);
+    }
+
     const totalPages = Math.max(1, pages.length);
 
     let html = fs.readFileSync(templatePath, 'utf-8');
@@ -751,7 +780,7 @@ export async function informeTubos({ path: destinationPath, ids } = {}) {
             if (row.isQualityHeader) {
               return `
         <tr class="quality-header-row">
-          <td colspan="4" style="padding-top: 10px; padding-bottom: 6px; font-size: 13px; font-style: italic; font-weight: 700; border-bottom: 1px solid #000080; color: #000080;">
+          <td colspan="4" style="font-size: 13px; font-style: italic; font-weight: 700; border-bottom: 1px solid #000080; color: #000080;">
             Calidad: ${escapeHtml(row.calidad)}
           </td>
         </tr>`;
@@ -760,16 +789,16 @@ export async function informeTubos({ path: destinationPath, ids } = {}) {
             if (row.isSubtotal) {
               return `
         <tr class="subtotal-spacer">
-          <td colspan="4" style="height: 8px; padding: 0; border: none;"></td>
+          <td colspan="4" style="height: 6px; padding: 0; border: none;"></td>
         </tr>
         <tr class="subtotal-row" style="font-weight:700; background:#f4f4f4;">
-          <td class="text-left" style="padding-top: 12px; padding-bottom: 12px;">Subtotal de ${escapeHtml(row.calidad)}</td>
-          <td class="text-right" style="padding-top: 12px; padding-bottom: 12px;">${row.unidades}</td>
-          <td class="text-right" style="padding-top: 12px; padding-bottom: 12px;">${row.paquetes}</td>
-          <td class="text-right" style="padding-top: 12px; padding-bottom: 12px;">${formatPeso(row.peso)}</td>
+          <td class="text-left">Subtotal de ${escapeHtml(row.calidad)}</td>
+          <td class="text-right">${row.unidades}</td>
+          <td class="text-right">${row.paquetes}</td>
+          <td class="text-right">${formatPeso(row.peso)}</td>
         </tr>
         <tr class="subtotal-spacer">
-          <td colspan="4" style="height: 8px; padding: 0; border: none;"></td>
+          <td colspan="4" style="height: 6px; padding: 0; border: none;"></td>
         </tr>`;
             }
 
