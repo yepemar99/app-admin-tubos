@@ -3,6 +3,7 @@ import { app, BrowserWindow } from 'electron';
 import fs from 'fs';
 import pathModule from 'path';
 import { ROWS_PER_PAGE_TEMPLATE } from '../utils/constants';
+import { orderQuery } from '../../utils/functions';
 
 function escapeHtml(value = '') {
   return String(value)
@@ -216,6 +217,20 @@ export const informeSalidasPaquetes = async ({
 
     const whereSQL = whereClauses.join(' AND ');
 
+    let orderBySQL = orderQuery({
+      secondaryOrderCols: [
+        'tc.nombre',
+        't.espesor',
+        'tt.nombre',
+        't.ancho',
+        't.alto',
+        't.diametro',
+        't.medida',
+      ],
+      safeOrderBy: 'tc.nombre',
+      safeOrderDir: 'ASC',
+    });
+
     // Agrupar por tubo_id (obteniendo también la calidad) y luego reagrupar por calidad
     const query = `
       SELECT
@@ -228,9 +243,10 @@ export const informeSalidasPaquetes = async ({
       FROM Salidas_Paqs_Tubos s
       LEFT JOIN Tubos t ON s.tubo_id = t.id
       LEFT JOIN Tipos_Calidad tc ON t.calidad_id = tc.id
+      LEFT JOIN Tipos_Tubos tt ON t.tipo_id = tt.id
       WHERE ${whereSQL}
-      GROUP BY s.tubo_id, t.medida, t.peso_unitario, t.calidad_id, tc.nombre
-      ORDER BY tc.nombre ASC, t.medida ASC
+      GROUP BY s.tubo_id, t.medida, t.peso_unitario, t.calidad_id, tc.nombre, tt.nombre, t.espesor, t.ancho, t.alto, t.diametro
+      ORDER BY ${orderBySQL}
     `;
 
     const rows = await conn.query(query, params);

@@ -11,6 +11,7 @@ import SalidaPaqsModal from './components/Modal';
 import DataFilters from '../../components/common/DataFilters';
 import { initFilters } from './utils';
 import InformePaqs from '../tubos/components/Informe';
+import { toast } from 'react-toastify';
 
 const SalidaPaqs = () => {
   const loadSalidasPaqs = async (
