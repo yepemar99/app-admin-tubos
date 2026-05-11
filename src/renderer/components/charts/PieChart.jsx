@@ -88,7 +88,9 @@ export default function DonutChart({ data = defaultData }) {
           justifyContent="space-between"
           sx={{ mt: 1 }}
         >
-          <Typography sx={{ color: 'text.secondary' }}>Total</Typography>
+          <Typography sx={{ color: 'text.secondary', fontWeight: 'bold' }}>
+            Total
+          </Typography>
           <Typography sx={{ fontWeight: 'bold' }}>
             {total.toLocaleString()}
           </Typography>

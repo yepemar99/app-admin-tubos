@@ -29,15 +29,15 @@ export default function SimpleBarChart({
             data: uData,
             label: uLabel,
             id: 'uvId',
-            colorGetter: () => '#05CD99',
-            color: '#05CD99',
+            colorGetter: () => '#00C49F',
+            color: '#00C49F',
           },
           {
             data: pData,
             label: pLabel,
             id: 'pvId',
-            colorGetter: () => '#E31A1A',
-            color: '#E31A1A',
+            colorGetter: () => '#E4665D',
+            color: '#E4665D',
           },
         ]}
         xAxis={[{ data: xLabels, height: 28 }]}

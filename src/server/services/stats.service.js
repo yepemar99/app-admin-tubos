@@ -83,6 +83,28 @@ export async function obtenerEstadisticasService(params = {}) {
 
     const produccionMensualRows = await conn.query(produccionMensualQuery);
 
+    const salidasPaquetesMensualQuery = `
+      SELECT
+        DATENAME(month, sp.creado) AS Mes_Nombre,
+        MONTH(sp.creado) AS Mes_Numero,
+        YEAR(sp.creado) AS Anio,
+        COUNT(sp.id) AS Total_Salidas,
+        SUM(sp.num_paqs) AS Total_Paquetes
+      FROM dbo.Salidas_Paqs_Tubos sp
+      WHERE sp.creado >= '${fechaInicioSql}' AND sp.creado <= '${fechaFinSql}'
+      GROUP BY
+        YEAR(sp.creado),
+        MONTH(sp.creado),
+        DATENAME(month, sp.creado)
+      ORDER BY
+        Anio,
+        Mes_Numero
+    `;
+
+    const salidasPaquetesMensualRows = await conn.query(
+      salidasPaquetesMensualQuery,
+    );
+
     const produccionMaquinasQuery = `
 			SELECT
 				m.id AS Maquina_Id,
@@ -111,6 +133,8 @@ export async function obtenerEstadisticasService(params = {}) {
         sp.creado AS fecha,
         sp.operario_id,
         o.nombre AS nombre_operario,
+        o.apellido1 AS apellido_operario1,
+        o.apellido2 AS apellido_operario2,
         sp.tubo_id,
         t.medida
       FROM dbo.Salidas_Paqs_Tubos sp
@@ -120,6 +144,55 @@ export async function obtenerEstadisticasService(params = {}) {
     `;
 
     const rowsSalidasPaquetes = await conn.query(querySalidaPaquetes);
+
+    // Histórico completo de salidas de paquetes con filtros de fecha
+    const queryHistoricoSalidasPaquetes = `
+      SELECT
+        sp.id,
+        sp.num_paqs,
+        sp.creado AS fecha,
+        sp.operario_id,
+        o.nombre AS nombre_operario,
+        o.apellido1 AS apellido_operario1,
+        o.apellido2 AS apellido_operario2,
+        sp.tubo_id,
+        t.medida,
+        DATEDIFF(MINUTE, LAG(sp.creado) OVER (ORDER BY sp.creado), sp.creado) AS tiempo_desde_anterior_minutos,
+        DATEDIFF(HOUR, LAG(sp.creado) OVER (ORDER BY sp.creado), sp.creado) AS tiempo_desde_anterior_horas
+      FROM dbo.Salidas_Paqs_Tubos sp
+      LEFT JOIN dbo.Operarios o ON sp.operario_id = o.id
+      LEFT JOIN dbo.Tubos t ON sp.tubo_id = t.id
+      WHERE sp.creado >= '${fechaInicioSql}' AND sp.creado <= '${fechaFinSql}'
+      ORDER BY sp.creado DESC
+    `;
+
+    const rowsHistoricoSalidasPaquetes = await conn.query(
+      queryHistoricoSalidasPaquetes,
+    );
+
+    //Totales
+    const queryBobinasCortadasTotales = `SELECT COUNT(*) FROM dbo.Bobinas_Cortadas`;
+    const resultBobinasCortadasTotales = await conn.query(
+      queryBobinasCortadasTotales,
+    );
+    const bobinasCortadasTotales = resultBobinasCortadasTotales?.[0]?.[''] || 0;
+
+    const queryTotalTubosBuenos = `SELECT SUM(cant_tubos_buenos) FROM dbo.Prod_Tubos`;
+    const resultTotalTubosBuenos = await conn.query(queryTotalTubosBuenos);
+    const totalTubosBuenos = resultTotalTubosBuenos?.[0]?.[''] || 0;
+
+    const queryIndiceMerma = `SELECT CAST((SUM(cant_tubos_malos) * 100.0 / NULLIF(SUM(cant_tubos_buenos + cant_tubos_malos), 0)) AS DECIMAL(10,2)) 
+FROM dbo.Prod_Tubos`;
+    const resultIndiceMerma = await conn.query(queryIndiceMerma);
+    const indiceMerma = resultIndiceMerma?.[0]?.[''] || 0;
+
+    const queryTotalFlejes = `SELECT SUM(unidades) FROM dbo.Flejes`;
+    const resultTotalFlejes = await conn.query(queryTotalFlejes);
+    const totalFlejes = resultTotalFlejes?.[0]?.[''] || 0;
+
+    const queryTotalSalidasPaqs = `SELECT SUM(num_paqs) FROM dbo.Salidas_Paqs_Tubos`;
+    const resultTotalSalidasPaqs = await conn.query(queryTotalSalidasPaqs);
+    const totalSalidasPaqs = resultTotalSalidasPaqs?.[0]?.[''] || 0;
 
     return {
       resumen: {
@@ -136,6 +209,13 @@ export async function obtenerEstadisticasService(params = {}) {
         tubosMalos: Number(row.Tubos_Malos) || 0,
         porcentajeTubosMalosSobreTotal: Number(row.Porcentaje_Tubos_Malos) || 0,
       })),
+      salidasPaquetesMensual: salidasPaquetesMensualRows.map((row) => ({
+        mesNombre: row.Mes_Nombre,
+        mesNumero: Number(row.Mes_Numero),
+        anio: Number(row.Anio),
+        totalSalidas: Number(row.Total_Salidas) || 0,
+        totalPaquetes: Number(row.Total_Paquetes) || 0,
+      })),
       graficoTubosMalosSobreTotal: produccionMensualRows.map((row) => ({
         label: `${row.Mes_Nombre} ${row.Anio}`,
         value: Number(row.Porcentaje_Tubos_Malos) || 0,
@@ -146,8 +226,33 @@ export async function obtenerEstadisticasService(params = {}) {
         fecha: row.fecha ? new Date(row.fecha).toISOString() : null,
         operarioId: Number(row.operario_id) || null,
         nombreOperario: row.nombre_operario || '',
+        apellidoOperario1: row.apellido_operario1 || '',
+        apellidoOperario2: row.apellido_operario2 || '',
+        nombreCompletoOperario:
+          `${row.nombre_operario || ''} ${row.apellido_operario1 || ''} ${row.apellido_operario2 || ''}`.trim(),
         tuboId: Number(row.tubo_id) || null,
         medida: row.medida || '',
+      })),
+      historicoSalidasPaquetes: rowsHistoricoSalidasPaquetes.map((row) => ({
+        id: Number(row.id),
+        numPaqs: Number(row.num_paqs) || 0,
+        fecha: row.fecha ? new Date(row.fecha).toISOString() : null,
+        operarioId: Number(row.operario_id) || null,
+        nombreOperario: row.nombre_operario || '',
+        apellidoOperario1: row.apellido_operario1 || '',
+        apellidoOperario2: row.apellido_operario2 || '',
+        nombreCompletoOperario:
+          `${row.nombre_operario || ''} ${row.apellido_operario1 || ''} ${row.apellido_operario2 || ''}`.trim(),
+        tuboId: Number(row.tubo_id) || null,
+        medida: row.medida || '',
+        tiempoDesdeAnteriorMinutos:
+          row.tiempo_desde_anterior_minutos !== null
+            ? Number(row.tiempo_desde_anterior_minutos)
+            : null,
+        tiempoDesdeAnteriorHoras:
+          row.tiempo_desde_anterior_horas !== null
+            ? Number(row.tiempo_desde_anterior_horas)
+            : null,
       })),
       graficoDistribucionMaquinas: {
         total: totalProduccionMaquinas,
@@ -156,6 +261,13 @@ export async function obtenerEstadisticasService(params = {}) {
           label: row.Maquina_Nombre,
           value: Number(row.Tubos_Buenos) || 0,
         })),
+      },
+      totales: {
+        bobinasCortadas: Number(bobinasCortadasTotales) || 0,
+        tubosBuenos: Number(totalTubosBuenos) || 0,
+        indiceMerma: Number(indiceMerma) || 0,
+        totalFlejes: Number(totalFlejes) || 0,
+        totalSalidasPaqs: Number(totalSalidasPaqs) || 0,
       },
       rangoFechas: {
         fechaInicio: startDate.toISOString(),

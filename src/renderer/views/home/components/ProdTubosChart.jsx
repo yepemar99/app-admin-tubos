@@ -6,6 +6,8 @@ import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import { formatearFechaCorta } from '../../../utils/functions';
 import DonutChart from '../../../components/charts/PieChart';
 import Timeline from '../../../components/charts/Timeline';
+import Totals from './Totals';
+import { LineChart } from '@mui/x-charts';
 
 const fontLightStyles = {
   color: '#989599',
@@ -41,12 +43,19 @@ const ProdTubosChart = () => {
   };
 
   const produccionMensual = stats?.produccionMensual || [];
+  const salidasPaquetesMensual = stats?.salidasPaquetesMensual || [];
   const graficoTubosMalosSobreTotal = stats?.graficoTubosMalosSobreTotal || [];
   const graficoDistribucionMaquinas = stats?.graficoDistribucionMaquinas || {};
   const uData = produccionMensual.map((item) => item.tubosBuenos || 0);
   const pData = produccionMensual.map((item) => item.tubosMalos || 0);
   const xLabels = produccionMensual.map((item) =>
     item.mesNombre ? `${item.mesNombre} ${item.anio}` : String(item.anio),
+  );
+  const salidasLabels = salidasPaquetesMensual.map((item) =>
+    item.mesNombre ? `${item.mesNombre} ${item.anio}` : String(item.anio),
+  );
+  const salidasData = salidasPaquetesMensual.map(
+    (item) => item.totalPaquetes || 0,
   );
   const sparkLineValues = graficoTubosMalosSobreTotal.map(
     (item) => item.value || 0,
@@ -57,18 +66,51 @@ const ProdTubosChart = () => {
       value: item.value,
     }),
   );
+  const timelineItems = (stats?.ultimasSalidas || []).map((salida) => {
+    const fecha = salida.fecha ? new Date(salida.fecha) : new Date();
+    const fechaFormato = fecha.toLocaleDateString('es-ES', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+
+    const tiempoRelativo = Math.max(
+      0,
+      Math.floor((new Date() - fecha) / (1000 * 60 * 60 * 24)),
+    );
+    const tiempoTranscurrido =
+      tiempoRelativo < 1
+        ? 'Hace poco'
+        : `Hace ${tiempoRelativo} día${tiempoRelativo > 1 ? 's' : ''}`;
+
+    return {
+      id: salida.id,
+      title: `${salida.numPaqs} tubos de ${salida.medida}`,
+      subtitle: `${salida.nombreOperario}`,
+      date: fechaFormato,
+      timeAgo: tiempoTranscurrido,
+      icon: 'package',
+      bgColor: '#7C3AED',
+    };
+  });
 
   React.useEffect(() => {
     loadStats();
   }, []);
 
-  console.log('Stats:', stats);
+  console.log('Stats de tubos:', stats);
 
   return (
     <Stack flexDirection={'column'} gap={1}>
+      <Stack justifyContent={'center'} sx={{ mb: 1 }}>
+        <Typography variant="h4" sx={{ fontWeight: 'bold', fontSize: 24 }}>
+          Producción de Tubos
+        </Typography>
+      </Stack>
+      <Totals stats={stats?.totales} />
       <Grid container spacing={1}>
         <Grid size={{ xs: 12, sm: 8 }}>
-          <Card variant="outlined" sx={{ p: 2 }}>
+          <Card variant="outlined" sx={{ p: 2, minHeight: 345 }}>
             <Typography variant="h6" sx={{ mb: 1 }}>
               Resumen de Producción de Tubos
             </Typography>
@@ -189,21 +231,45 @@ const ProdTubosChart = () => {
           </Card>
         </Grid>
         <Grid size={{ xs: 12, sm: 4 }}>
-          <Card variant="outlined" sx={{ p: 2, minHeight: 337.8 }}>
-            <Typography variant="h6" sx={{ mb: 1 }}>
-              Productividad por Máquina
+          <Card variant="outlined" sx={{ p: 2, minHeight: 345 }}>
+            <Typography variant="h6">Productividad por Máquina</Typography>
+            <Typography sx={fontLightStyles}>
+              Desde {formatearFechaCorta(stats?.rangoFechas?.fechaInicio)} hasta{' '}
+              {formatearFechaCorta(stats?.rangoFechas?.fechaFin)}
             </Typography>
             <DonutChart data={maquinasData} />
           </Card>
         </Grid>
       </Grid>
-      <Grid container>
+      <Grid spacing={2} container>
         <Grid size={{ xs: 12, sm: 4 }}>
-          <Card variant="outlined" sx={{ p: 2, minHeight: 337.8 }}>
+          <Card variant="outlined" sx={{ p: 2, minHeight: 340 }}>
             <Typography variant="h6" sx={{ mb: 1 }}>
               Historial y Tendencia de Salidas
             </Typography>
-            <Timeline items={[]} />
+            {loading ? (
+              <Typography sx={{ color: '#6B7280' }}>Cargando...</Typography>
+            ) : (
+              <Timeline items={timelineItems} />
+            )}
+          </Card>
+        </Grid>
+        <Grid size={{ xs: 12, sm: 8 }}>
+          <Card variant="outlined" sx={{ p: 2, minHeight: 340 }}>
+            <Typography variant="h6" sx={{ mb: 1 }}>
+              Historial y Tendencia de Salidas
+            </Typography>
+            <LineChart
+              xAxis={[{ data: salidasLabels, scaleType: 'band' }]}
+              series={[
+                {
+                  data: salidasData,
+                  label: 'Total de Paquetes',
+                  showMark: ({ index }) => index % 2 === 0,
+                },
+              ]}
+              height={300}
+            />
           </Card>
         </Grid>
       </Grid>

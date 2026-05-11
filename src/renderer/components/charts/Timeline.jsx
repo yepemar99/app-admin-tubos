@@ -51,7 +51,7 @@ const Timeline = ({
               content: '""',
               position: 'absolute',
               left: 20,
-              top: 50,
+              top: 40,
               bottom: -24,
               width: 2,
               backgroundColor: '#E5DFFF',
@@ -78,6 +78,7 @@ const Timeline = ({
                 fontSize: '0.95rem',
                 fontWeight: 500,
                 color: '#1F2937',
+                textTransform: 'capitalize',
               }}
             >
               {item.title}

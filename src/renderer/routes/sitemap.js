@@ -1,46 +1,46 @@
-import paths from "./paths";
+import paths from './paths';
 
 export const sitemap = [
   {
-    id: "home",
-    subheader: "Inicio",
+    id: 'home',
+    subheader: 'Inicio',
     path: paths.home,
-    icon: "malla",
+    icon: 'home',
   },
   {
-    id: "cutting_plan",
-    subheader: "Plan de Corte",
+    id: 'cutting_plan',
+    subheader: 'Plan de Corte',
     path: paths.cuttingPlan,
-    icon: "malla",
+    icon: 'cutting_plan',
   },
   {
-    id: "sales_packages",
-    subheader: "Salidas de paquetes",
+    id: 'sales_packages',
+    subheader: 'Salidas de paquetes',
     path: paths.salesPackages,
-    icon: "malla",
+    icon: 'sales_packages',
   },
   {
-    id: "inventory",
-    subheader: "Inventario",
-    icon: "malla",
+    id: 'inventory',
+    subheader: 'Inventario',
+    icon: 'inventory',
     items: [
       {
-        id: "bobinas",
-        subheader: "Bobinas",
+        id: 'bobinas',
+        subheader: 'Bobinas',
         path: paths.bobinas,
-        icon: "malla",
+        icon: 'malla',
       },
       {
-        id: "flejes",
-        subheader: "Flejes",
+        id: 'flejes',
+        subheader: 'Flejes',
         path: paths.flejes,
-        icon: "malla",
+        icon: 'flejes',
       },
       {
-        id: "tubos",
-        subheader: "Tubos",
+        id: 'tubos',
+        subheader: 'Tubos',
         path: paths.tubos,
-        icon: "malla",
+        icon: 'tubos',
       },
     ],
   },

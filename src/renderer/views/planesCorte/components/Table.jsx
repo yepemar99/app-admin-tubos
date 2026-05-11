@@ -151,7 +151,6 @@ const getColumns = (
     headerName: 'Actions',
     editable: false,
     align: 'center',
-    flex: 1,
     renderCell: (params) => (
       <Stack
         height={1}
