@@ -1,19 +1,19 @@
-import Link from "@mui/material/Link";
-import Box from "@mui/material/Box";
-import List from "@mui/material/List";
-import Stack from "@mui/material/Stack";
-import Button from "@mui/material/Button";
-import ButtonBase from "@mui/material/ButtonBase";
-import Typography from "@mui/material/Typography";
-import ListItem from "./list-items/ListItem";
-import CollapseListItem from "./list-items/CollapseListItem";
-import IconifyIcon from "../../components/base/IconifyIcon";
-import LogoImg from "../../../assets/logos/logo.jpg";
-import { sitemap } from "../../routes/sitemap";
-import Image from "../../components/base/Image";
-import { useLocation } from "react-router-dom";
-import paths from "../../routes/paths";
-import React from "react";
+import Link from '@mui/material/Link';
+import Box from '@mui/material/Box';
+import List from '@mui/material/List';
+import Stack from '@mui/material/Stack';
+import Button from '@mui/material/Button';
+import ButtonBase from '@mui/material/ButtonBase';
+import Typography from '@mui/material/Typography';
+import ListItem from './list-items/ListItem';
+import CollapseListItem from './list-items/CollapseListItem';
+import IconifyIcon from '../../components/base/IconifyIcon';
+import LogoImg from '../../../assets/logos/logo.jpg';
+import { sitemap } from '../../routes/sitemap';
+import Image from '../../components/base/Image';
+import { useLocation } from 'react-router-dom';
+import paths from '../../routes/paths';
+import React from 'react';
 
 const DrawerItems = () => {
   const location = useLocation();
@@ -36,10 +36,10 @@ const DrawerItems = () => {
       >
         <Box
           sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            width: "100%",
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '100%',
           }}
         >
           <ButtonBase component={Link} href={paths.home} disableRipple>
@@ -48,7 +48,7 @@ const DrawerItems = () => {
               alt="logo"
               width={140}
               sx={{
-                height: "auto",
+                height: 'auto',
               }}
             />
           </ButtonBase>
@@ -69,7 +69,7 @@ const DrawerItems = () => {
               active={currentPath === route.path}
               {...route}
             />
-          )
+          ),
         )}
       </List>
     </>

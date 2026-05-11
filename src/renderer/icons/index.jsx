@@ -19,7 +19,7 @@ import RadioButtonCheckedIcon from '@mui/icons-material/RadioButtonChecked';
 import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 import TollRoundedIcon from '@mui/icons-material/TollRounded';
 import ContentCutRoundedIcon from '@mui/icons-material/ContentCutRounded';
-
+import ViewColumnIcon from '@mui/icons-material/ViewColumn';
 export const muiIcons = {
   home: HomeIcon,
   dashboard: DashboardIcon,
@@ -37,8 +37,8 @@ export const muiIcons = {
   bobinas: TollRoundedIcon,
   stats: QueryStatsIcon,
   inventory: InventoryIcon,
-  flejes: ViewHeadlineIcon,
-  tubos: RadioButtonCheckedIcon,
+  flejes: ViewColumnIcon,
+  tubos: CalendarViewMonthIcon,
   sales_packages: LocalShippingIcon,
   cutting_plan: ContentCutRoundedIcon,
 };

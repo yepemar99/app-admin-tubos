@@ -403,7 +403,13 @@ export async function informeFlejes({ path: destinationPath, ids } = {}) {
     whereClauses.push(`f.unidades > 0`);
 
     let orderBySQL = orderQuery({
-      secondaryOrderCols: ['tc.nombre', 'f.concepto'],
+      secondaryOrderCols: [
+        'tc.nombre',
+        'f.espesor',
+        'f.ancho',
+        'f.concepto',
+        'f.id',
+      ],
       safeOrderBy: 'tc.nombre',
       safeOrderDir: 'ASC',
     });

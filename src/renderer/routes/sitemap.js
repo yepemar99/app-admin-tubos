@@ -28,7 +28,7 @@ export const sitemap = [
         id: 'bobinas',
         subheader: 'Bobinas',
         path: paths.bobinas,
-        icon: 'malla',
+        icon: 'bobinas',
       },
       {
         id: 'flejes',
