@@ -441,6 +441,15 @@ export async function listarBobinasCortadasService({
     if (bobina_id && bobina_id !== 0)
       whereClauses.push(`bc.bobina_id = ${Number(bobina_id)}`);
 
+    const queryCount = `
+      SELECT COUNT(*) AS total
+      FROM Bobinas_Cortadas bc
+      JOIN Bobinas b ON bc.bobina_id = b.id
+      WHERE ${whereClauses.join(' AND ')}
+    `;
+
+    const countResult = await conn.query(queryCount);
+
     const selectQuery = `
       SELECT 
         bc.id, bc.peso_real, bc.ancho_inicial, bc.ancho_final, 
@@ -448,6 +457,7 @@ export async function listarBobinasCortadasService({
         bc.bobina_id, bc.turno_id, bc.operario_id, bc.creado,
         b.ancho, b.espesor, b.peso_medio, 
         t.entrada, t.salida, 
+        b.concepto, b.art_concepto,
         o.nombre 
       FROM Bobinas_Cortadas bc
       JOIN Bobinas b ON bc.bobina_id = b.id
@@ -460,11 +470,18 @@ export async function listarBobinasCortadasService({
 
     const rows = await conn.query(selectQuery);
 
+    console.log(
+      'Bobinas cortadas listadas:',
+      rows.map((row) => row.nombre),
+    );
+
     return {
       data: rows.map((row) => ({
         id: Number(row.id),
         peso_real: Number(row.peso_real),
         ancho_inicial: Number(row.ancho_inicial),
+        bobina_concepto: row.concepto,
+        bobina_art_concepto: row.art_concepto,
         ancho_final: Number(row.ancho_final),
         espesor_inicial: Number(row.espesor_inicial),
         espesor_final: Number(row.espesor_final),
@@ -480,7 +497,7 @@ export async function listarBobinasCortadasService({
         operario_nombre: row.nombre,
         creado: row.creado,
       })),
-      total: rows.length,
+      total: countResult[0].total,
     };
   } catch (error) {
     console.error('Error listando bobinas cortadas:', error.message);
