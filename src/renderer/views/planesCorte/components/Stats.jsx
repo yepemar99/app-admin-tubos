@@ -185,9 +185,27 @@ const PlanCorteMultiView = ({ id = 0 }) => {
       sortable: false,
     },
     {
+      field: 'calidad',
+      headerName: 'Calidad',
+      width: 120,
+      sortable: false,
+    },
+    {
       field: 'num_flejes',
       headerName: 'Cantidad',
       width: 100,
+      sortable: false,
+    },
+    {
+      field: 'espesor',
+      headerName: 'Espesor (mm)',
+      width: 130,
+      sortable: false,
+    },
+    {
+      field: 'ancho',
+      headerName: 'Ancho (mm)',
+      width: 130,
       sortable: false,
     },
     {

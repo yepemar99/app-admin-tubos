@@ -349,9 +349,26 @@ export async function eliminarFlejeService(id) {
   }
 }
 
-export async function listarFlejesPorCortesService({ corte_id } = {}) {
+export async function listarFlejesPorCortesService({
+  corte_id,
+  orderBy = '',
+  orderDir = 'ASC',
+} = {}) {
   try {
     const conn = database.getConnection();
+
+    let orderBySQL = orderQuery({
+      secondaryOrderCols: [
+        'tc.nombre',
+        'f.espesor',
+        'f.ancho',
+        'f.concepto',
+        'f.id',
+      ],
+      orderBy,
+      orderDir,
+    });
+
     const query = `
       SELECT 
         fc.id,
@@ -361,11 +378,17 @@ export async function listarFlejesPorCortesService({ corte_id } = {}) {
         fc.factor_proporcional_peso,
         fc.creado, 
         fc.fleje_id,
-        f.concepto
+        tc.nombre AS calidad,
+        f.concepto,
+        f.espesor,
+        f.ancho
       FROM Flejes_Plan_Corte fc
       JOIN Flejes f ON fc.fleje_id = f.id
+      LEFT JOIN Tipos_Calidad AS tc ON f.calidad_id = tc.id
       WHERE fc.plan_corte_id = ?
+      ORDER BY ${orderBySQL}
     `;
+
     const rows = await conn.query(query, [corte_id]);
     return {
       data: rows.map((row) => ({
@@ -377,6 +400,9 @@ export async function listarFlejesPorCortesService({ corte_id } = {}) {
         peso_unit_definido: Number(row.peso_unit_definido),
         creado: row.creado,
         fleje_concepto: row.concepto,
+        calidad: row.calidad,
+        espesor: Number(row.espesor),
+        ancho: Number(row.ancho),
       })),
       total: rows.length,
     };

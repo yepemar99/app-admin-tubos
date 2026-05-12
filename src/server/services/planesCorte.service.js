@@ -1,4 +1,5 @@
 import database from '../../db/database';
+import { orderQuery } from '../../utils/functions';
 
 export async function listarPlanesCorteService({
   page = 1,
@@ -87,15 +88,30 @@ export async function listarPlanesCorteService({
 export async function listarFlejesPorCortes(plan_corte_id) {
   const conn = database.getConnection();
 
+  let orderBySQL = orderQuery({
+    secondaryOrderCols: [
+      'tc.nombre',
+      'f.espesor',
+      'f.ancho',
+      'f.concepto',
+      'f.id',
+    ],
+  });
+
   try {
     const query = `
       SELECT 
         fpc.*,           
         f.concepto,
+        f.espesor,
+        f.ancho,
         f.calidad_id,
+        tc.nombre AS calidad,
         f.ancho
       FROM Flejes_Plan_Corte AS fpc
       INNER JOIN Flejes AS f ON fpc.fleje_id = f.id
+      LEFT JOIN Tipos_Calidad AS tc ON f.calidad_id = tc.id
+      ORDER BY ${orderBySQL}
       WHERE fpc.plan_corte_id = ?
     `;
     const result = await conn.query(query, [plan_corte_id]);
