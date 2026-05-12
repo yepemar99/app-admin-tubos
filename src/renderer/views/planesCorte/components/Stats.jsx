@@ -245,14 +245,14 @@ const PlanCorteMultiView = ({ id = 0 }) => {
           sx={{ borderBottom: 1, borderColor: 'divider' }}
         >
           <Tab
-            label={`Bobinas Procesadas (${bobinas.length})`}
-            icon={<Layers fontSize="small" />}
+            label={`Flejes a Cortar (${flejes.length})`}
+            icon={<Inventory2 />}
             iconPosition="start"
             sx={{ fontSize: '14px', height: 10, fontWeight: 'bold' }}
           />
           <Tab
-            label={`Flejes a Cortar (${flejes.length})`}
-            icon={<Inventory2 />}
+            label={`Bobinas Procesadas (${bobinas.length})`}
+            icon={<Layers fontSize="small" />}
             iconPosition="start"
             sx={{ fontSize: '14px', height: 10, fontWeight: 'bold' }}
           />
@@ -260,7 +260,7 @@ const PlanCorteMultiView = ({ id = 0 }) => {
       </Paper>
 
       {/* Tab 1: Bobinas */}
-      {tabValue === 0 && (
+      {tabValue === 1 && (
         <Paper sx={{ mb: 3, p: 0 }}>
           <DataGrid
             sx={{ maxHeight: 'calc(100vh - 200px)', width: '100%' }}
@@ -299,7 +299,7 @@ const PlanCorteMultiView = ({ id = 0 }) => {
       )}
 
       {/* Tab 2: Flejes */}
-      {tabValue === 1 && (
+      {tabValue === 0 && (
         <Paper sx={{ mb: 3, p: 0 }}>
           <DataGrid
             sx={{ maxHeight: 'calc(100vh - 200px)', width: '100%' }}

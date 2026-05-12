@@ -76,19 +76,28 @@ export async function listarTodosFlejesService({ calidad_id = null }) {
     const countResult = await conn.query(countQuery);
     const total = countResult[0]?.total ? Number(countResult[0].total) : 0;
 
+    let orderBySQL = orderQuery({
+      secondaryOrderCols: [
+        'tc.nombre',
+        'f.espesor',
+        'f.ancho',
+        'f.concepto',
+        'f.id',
+      ],
+      safeOrderBy: '',
+      safeOrderDir: 'ASC',
+    });
+
     const selectQuery = `
-      WITH FlejesCTE AS (
-        SELECT 
-          id, 
-          concepto, 
-          creado,
-          calidad_id, 
-          ROW_NUMBER() OVER (ORDER BY creado DESC) AS rn
-        FROM Flejes
-        WHERE ${whereSQL}
-      )
-      SELECT *
-      FROM FlejesCTE
+      SELECT
+          f.id, 
+          f.concepto,
+          f.espesor,
+          f.ancho
+      FROM Flejes AS f
+      LEFT JOIN Tipos_Calidad AS tc ON f.calidad_id = tc.id
+      WHERE ${whereSQL}
+      ORDER BY ${orderBySQL}
     `;
 
     const rows = await conn.query(selectQuery);
@@ -98,6 +107,8 @@ export async function listarTodosFlejesService({ calidad_id = null }) {
         id: Number(row.id),
         concepto: row.concepto,
         creado: row.creado,
+        espesor: Number(row.espesor),
+        ancho: Number(row.ancho),
         calidad_id: row.calidad_id ? Number(row.calidad_id) : null,
       })),
       total,
@@ -365,8 +376,8 @@ export async function listarFlejesPorCortesService({
         'f.concepto',
         'f.id',
       ],
-      orderBy,
-      orderDir,
+      safeOrderBy: orderBy,
+      safeOrderDir: orderDir,
     });
 
     const query = `

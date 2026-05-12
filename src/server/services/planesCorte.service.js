@@ -111,9 +111,11 @@ export async function listarFlejesPorCortes(plan_corte_id) {
       FROM Flejes_Plan_Corte AS fpc
       INNER JOIN Flejes AS f ON fpc.fleje_id = f.id
       LEFT JOIN Tipos_Calidad AS tc ON f.calidad_id = tc.id
-      ORDER BY ${orderBySQL}
       WHERE fpc.plan_corte_id = ?
+      ORDER BY ${orderBySQL}
     `;
+    console.log('Query a ejecutar:', query);
+    console.log('Valor de plan_corte_id:', plan_corte_id);
     const result = await conn.query(query, [plan_corte_id]);
     return { data: result };
   } catch (err) {
