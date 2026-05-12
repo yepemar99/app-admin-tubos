@@ -468,12 +468,10 @@ export async function listarBobinasCortadasService({
       OFFSET ${offset} ROWS FETCH NEXT ${safePageSize} ROWS ONLY
     `;
 
-    const rows = await conn.query(selectQuery);
+    console.log('queryCount:', queryCount);
+    console.log('selectQuery:', selectQuery);
 
-    console.log(
-      'Bobinas cortadas listadas:',
-      rows.map((row) => row.nombre),
-    );
+    const rows = await conn.query(selectQuery);
 
     return {
       data: rows.map((row) => ({
@@ -497,7 +495,7 @@ export async function listarBobinasCortadasService({
         operario_nombre: row.nombre,
         creado: row.creado,
       })),
-      total: countResult[0].total,
+      total: countResult[0]?.total ? Number(countResult[0].total) : 0,
     };
   } catch (error) {
     console.error('Error listando bobinas cortadas:', error.message);

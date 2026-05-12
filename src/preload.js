@@ -8,7 +8,7 @@ contextBridge.exposeInMainWorld('versions', {
 
 contextBridge.exposeInMainWorld('api', {
   planes: {
-    getAll: () => ipcRenderer.invoke('planes:getAll'),
+    getAll: (payload) => ipcRenderer.invoke('planes:getAll', payload),
     getFlejesPorCortes: (id) =>
       ipcRenderer.invoke('planes:getFlejesPorCortes', id),
     create: (payload) => ipcRenderer.invoke('planes:create', payload),

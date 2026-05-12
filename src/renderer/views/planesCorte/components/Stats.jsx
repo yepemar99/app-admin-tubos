@@ -22,7 +22,7 @@ import {
 import { DataGrid } from '@mui/x-data-grid';
 import DataGridFooter from '../../../components/common/DataGridFooter';
 
-const PAGE_SIZE = 1;
+const PAGE_SIZE = 20;
 const ROW_HEIGHT = 52;
 
 const PlanCorteMultiView = ({ id = 0 }) => {
@@ -56,12 +56,8 @@ const PlanCorteMultiView = ({ id = 0 }) => {
   };
 
   const loadFlejes = async () => {
-    console.log('Cargando flejes para el plan de corte con ID:', id);
     return await window.api.flejes.getAllPlanesCorte({ corte_id: id });
   };
-
-  console.log('Bobinas cargadas:', bobinas);
-  console.log('Flejes cargados:', flejes);
 
   React.useEffect(() => {
     const fetchData = async () => {
@@ -69,6 +65,7 @@ const PlanCorteMultiView = ({ id = 0 }) => {
         const resultBobinas = await loadBobinas({ page: pageBobinas });
         const resultFlejes = await loadFlejes();
         if (resultBobinas.success) {
+          console.log('Bobinas cortadas del plan de corte:', resultBobinas);
           setBobinas(resultBobinas.data);
           setTotalBobinas(resultBobinas.total);
         } else {
@@ -97,11 +94,11 @@ const PlanCorteMultiView = ({ id = 0 }) => {
     {
       field: 'id',
       headerName: 'ID',
-      width: 80,
+      width: 40,
       sortable: false,
     },
     {
-      field: 'operario_nombre',
+      field: 'bobina_concepto',
       headerName: 'Bobina',
       flex: 1,
       minWidth: 150,
@@ -110,7 +107,7 @@ const PlanCorteMultiView = ({ id = 0 }) => {
     {
       field: 'turno',
       headerName: 'Turno',
-      width: 130,
+      width: 100,
       sortable: false,
       renderCell: (params) => {
         return (
@@ -122,27 +119,43 @@ const PlanCorteMultiView = ({ id = 0 }) => {
       },
     },
     {
-      field: 'ancho_final',
-      headerName: 'Ancho Final',
-      width: 130,
+      field: 'ancho',
+      headerName: 'Ancho Inicial / Final (mm)',
+      width: 200,
       sortable: false,
+      renderCell: (params) => {
+        return (
+          <Box>
+            {params.row?.ancho_inicial || 'N/A'} /{' '}
+            {params.row?.ancho_final || 'N/A'}
+          </Box>
+        );
+      },
     },
     {
-      field: 'espesor_final',
-      headerName: 'Espesor',
-      width: 120,
+      field: 'espesor',
+      headerName: 'Espesor Inicial / Final  (mm)',
+      width: 210,
       sortable: false,
+      renderCell: (params) => {
+        return (
+          <Box>
+            {params.row?.espesor_inicial || 'N/A'} /{' '}
+            {params.row?.espesor_final || 'N/A'}
+          </Box>
+        );
+      },
     },
     {
       field: 'peso_real',
-      headerName: 'Peso',
+      headerName: 'Peso (kg)',
       width: 100,
       sortable: false,
     },
     {
       field: 'creado',
       headerName: 'Fecha',
-      width: 150,
+      width: 120,
       sortable: false,
     },
   ];

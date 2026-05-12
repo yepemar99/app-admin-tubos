@@ -6,7 +6,6 @@ export async function listarPlanesCorteService({
   orderBy = 'id',
   orderDir = 'DESC',
   searchTerm = '',
-  estado = null,
 } = {}) {
   const conn = database.getConnection();
 
@@ -21,14 +20,9 @@ export async function listarPlanesCorteService({
     if (searchTerm) {
       whereClauses.push(`
         (
-          codigo LIKE '%${searchTerm}%'
-          OR id LIKE '%${searchTerm}%'
+           id = ${isNaN(Number(searchTerm)) ? 'NULL' : Number(searchTerm)}
         )
       `);
-    }
-
-    if (estado && Number(estado) !== null) {
-      whereClauses.push(`t.estado = ${Number(estado)}`);
     }
 
     const whereSQL = whereClauses.join(' AND ');

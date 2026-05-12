@@ -67,7 +67,6 @@ const PlanesCorteCrud = () => {
       page,
       pageSize,
       searchTerm,
-      estado: filters.find((f) => f.name === 'estado')?.value || null,
     });
   };
 
@@ -176,7 +175,7 @@ const PlanesCorteCrud = () => {
       <DataFilters
         sx={{ mb: 2 }}
         loading={loadingFilters}
-        filters={filters}
+        filters={[]}
         handleFilterChange={handleFilterChange}
         handleCleanFilters={handleClearAllFilters}
       />

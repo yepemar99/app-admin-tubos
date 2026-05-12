@@ -10,7 +10,7 @@ const PlanCorteModalStats = ({
   return (
     <Modal
       title={`Plan de Corte #${id}`}
-      maxWidth="lg"
+      maxWidth="xl"
       open={open}
       handleClose={handleCancel}
     >
