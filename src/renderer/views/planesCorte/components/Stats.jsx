@@ -34,6 +34,8 @@ const PlanCorteMultiView = ({ id = 0 }) => {
   const [pageBobinas, setPageBobinas] = React.useState(1);
   const [pageFlejes, setPageFlejes] = React.useState(1);
   const [totalBobinas, setTotalBobinas] = React.useState(0);
+  const [sortModelBobinas, setSortModelBobinas] = React.useState([]);
+  const [sortModelFlejes, setSortModelFlejes] = React.useState([]);
 
   // CÁLCULOS AGREGADOS
   const pesoTotalEntrada = bobinas.reduce((acc, b) => acc + b.peso_real, 0);
@@ -47,11 +49,13 @@ const PlanCorteMultiView = ({ id = 0 }) => {
     : ((pesoTotalSalida / pesoTotalEntrada) * 100).toFixed(1);
   const isFinalizado = bobinas.length > 0 && flejes.length > 0;
 
-  const loadBobinas = async ({ page = 1 }) => {
+  const loadBobinas = async ({ page = 1, orderBy = '', orderDir = '' }) => {
     return await window.api.bobinas.getAllCortadas({
       page: page,
       pageSize: PAGE_SIZE,
       plan_id: id,
+      orderBy,
+      orderDir,
     });
   };
 
@@ -65,7 +69,6 @@ const PlanCorteMultiView = ({ id = 0 }) => {
         const resultBobinas = await loadBobinas({ page: pageBobinas });
         const resultFlejes = await loadFlejes();
         if (resultBobinas.success) {
-          console.log('Bobinas cortadas del plan de corte:', resultBobinas);
           setBobinas(resultBobinas.data);
           setTotalBobinas(resultBobinas.total);
         } else {
@@ -102,7 +105,13 @@ const PlanCorteMultiView = ({ id = 0 }) => {
       headerName: 'Bobina',
       flex: 1,
       minWidth: 150,
-      sortable: false,
+      sortable: true,
+    },
+    {
+      field: 'calidad',
+      headerName: 'Calidad',
+      width: 120,
+      sortable: true,
     },
     {
       field: 'turno',
@@ -248,6 +257,14 @@ const PlanCorteMultiView = ({ id = 0 }) => {
             disableColumnMenu
             disableColumnSelector
             disableRowSelectionOnClick
+            onSortModelChange={(model) => {
+              setSortModelBobinas(model);
+              loadBobinas({
+                page: pageBobinas,
+                orderBy: model[0]?.field || '',
+                orderDir: model[0]?.sort || '',
+              });
+            }}
             paginationModel={{
               page: pageBobinas - 1,
               pageSize: PAGE_SIZE,

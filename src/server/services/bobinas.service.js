@@ -418,6 +418,7 @@ export async function listarBobinasCortadasService({
     const allowedOrderBy = {
       id: 'b.id',
       concepto: 'b.concepto',
+      bobina_concepto: 'b.concepto',
       art_concepto: 'b.art_concepto',
       unidades: 'b.unidades',
       espesor: 'b.espesor',
@@ -430,7 +431,7 @@ export async function listarBobinasCortadasService({
       creado: 'b.creado',
     };
 
-    const safeOrderBy = allowedOrderBy[String(orderBy)] || 'b.creado';
+    const safeOrderBy = allowedOrderBy[String(orderBy)] || '';
     const safeOrderDir =
       String(orderDir).toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
 
@@ -450,6 +451,12 @@ export async function listarBobinasCortadasService({
 
     const countResult = await conn.query(queryCount);
 
+    let orderBySQL = orderQuery({
+      secondaryOrderCols: ['b.id', 'tc.nombre', 'b.concepto'],
+      safeOrderBy,
+      safeOrderDir,
+    });
+
     const selectQuery = `
       SELECT 
         bc.id, bc.peso_real, bc.ancho_inicial, bc.ancho_final, 
@@ -458,24 +465,23 @@ export async function listarBobinasCortadasService({
         b.ancho, b.espesor, b.peso_medio, 
         t.entrada, t.salida, 
         b.concepto, b.art_concepto,
-        o.nombre 
+        o.nombre, tc.nombre AS calidad
       FROM Bobinas_Cortadas bc
       JOIN Bobinas b ON bc.bobina_id = b.id
       JOIN Turnos t ON bc.turno_id = t.id
       JOIN Operarios o ON bc.operario_id = o.id
+      LEFT JOIN Tipos_Calidad tc ON b.calidad_id = tc.id
       WHERE ${whereClauses.join(' AND ')}
-      ORDER BY ${safeOrderBy} ${safeOrderDir}
+      ORDER BY ${orderBySQL}
       OFFSET ${offset} ROWS FETCH NEXT ${safePageSize} ROWS ONLY
     `;
-
-    console.log('queryCount:', queryCount);
-    console.log('selectQuery:', selectQuery);
 
     const rows = await conn.query(selectQuery);
 
     return {
       data: rows.map((row) => ({
         id: Number(row.id),
+        calidad: row.calidad,
         peso_real: Number(row.peso_real),
         ancho_inicial: Number(row.ancho_inicial),
         bobina_concepto: row.concepto,

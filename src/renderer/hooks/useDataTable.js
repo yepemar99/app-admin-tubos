@@ -33,7 +33,6 @@ const useDataTable = ({
   const [sortModel, setSortModel] = useState([{ field: 'id', sort: 'desc' }]);
 
   const handleSortModel = (model) => {
-    console.log('Nuevo sort model:', model);
     setSortModel(model);
   };
 
