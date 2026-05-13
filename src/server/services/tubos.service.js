@@ -838,11 +838,24 @@ export async function informeTubos({ path: destinationPath, ids } = {}) {
           </tbody>
         </table>
 
-        ${
-          showTotals
-            ? `<div class="grand-total">\n          <span>Suma total de tubos en Dos Hermanas</span>\n          <div class="grand-total-values">\n            <span>${totalUnidades}</span>\n            <span>${totalPaquetes}</span>\n            <span>${formatPeso(totalPeso)}</span>\n          </div>\n        </div>`
-            : ''
-        }
+
+
+                   ${
+                     showTotals
+                       ? `<table>
+                <tfoot>
+                  <tr class="grand-total">
+                    <td class="text-left" style="width: 45%">Total general</td>
+                    <td class="text-right" style="width: 18%">${totalUnidades}</td>
+                    <td class="text-right" style="width: 18%">${totalPaquetes}</td>
+                    <td class="text-right"  style="width: 19%">${formatPeso(totalPeso)}</td>
+                  </tr>
+                </tfoot>
+              </table>`
+                       : ''
+                   }
+
+        
 
         <div class="footer" style="position: static; margin-top: auto;">
           <span>${escapeHtml(fechaFooter)}</span>

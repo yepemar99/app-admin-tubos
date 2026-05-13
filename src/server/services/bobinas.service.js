@@ -721,11 +721,19 @@ export async function informeBobinas({ path: destinationPath, ids } = {}) {
           </tbody>
         </table>
 
-        ${
-          showTotals
-            ? `<div class="grand-total">\n          <span>Suma total de bobinas en Dos Hermanas</span>\n          <div class="grand-total-values">\n            <span>${totalUnidades}</span>\n            <span>${formatPeso(totalPeso)}</span>\n          </div>\n        </div>`
-            : ''
-        }
+               ${
+                 showTotals
+                   ? `<table>
+                <tfoot>
+                  <tr class="grand-total">
+                    <td class="text-left" style="width: 60%">Total general</td>
+                    <td class="text-right" style="width: 20%">${totalUnidades}</td>
+                    <td class="text-right"  style="width: 20%">${formatPeso(totalPeso)}</td>
+                  </tr>
+                </tfoot>
+              </table>`
+                   : ''
+               }
 
         <div class="footer" style="position: static; margin-top: auto;">
           <span>${escapeHtml(fechaFooter)}</span>

@@ -458,11 +458,19 @@ export const informeSalidasPaquetesReport = async ({
           </tbody>
         </table>
 
-        ${
-          showTotals
-            ? `<div class="grand-total">\n          <span>Suma total de salidas</span>\n          <div class="grand-total-values">\n            <span>${totalPaquetes}</span>\n            <span>${formatPeso(totalPeso)}</span>\n          </div>\n        </div>`
-            : ''
-        }
+                 ${
+                   showTotals
+                     ? `<table>
+                <tfoot>
+                  <tr class="grand-total">
+                    <td class="text-left" style="width: 55%">Total general</td>
+                    <td class="text-right" style="width: 20%">${totalPaquetes}</td>
+                    <td class="text-right"  style="width: 25%">${formatPeso(totalPeso)}</td>
+                  </tr>
+                </tfoot>
+              </table>`
+                     : ''
+                 }
 
         <div class="footer" style="position: static; margin-top: auto;">
           <span>${escapeHtml(fechaFooter)}</span>
