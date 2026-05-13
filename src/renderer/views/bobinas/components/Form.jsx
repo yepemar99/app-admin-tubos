@@ -182,7 +182,7 @@ const BobinaForm = ({ data = null, handleConfirm, handleCancel }) => {
       // Generar concepto
       if (fabricanteNom) {
         const conceptoGenerado =
-          `BOBINA ${materialNom} ${fabricanteNom} ${watchEspesor}x${watchAncho}`.trim();
+          `BOBINA ${materialNom ? `${materialNom} ` : ''}${fabricanteNom} ${watchEspesor}x${watchAncho}`.trim();
         setValue('concepto', conceptoGenerado);
       }
     }

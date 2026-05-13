@@ -28,6 +28,7 @@ export async function listarTodosTiposCalidadService() {
         id: Number(row.id),
         nombre: row.nombre,
         label_bobina: row.label_bobina,
+        label_fleje: row.label_fleje,
         creado: row.creado,
       })),
       total,

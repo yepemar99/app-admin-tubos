@@ -46,8 +46,6 @@ const schema = z.object({
 
 const FlejeForm = ({ data = null, handleConfirm, handleCancel }) => {
   const { tiposCalidad } = useContext(DataContext);
-  const [openAnomalyDialog, setOpenAnomalyDialog] = useState(false);
-  const [pendingFormData, setPendingFormData] = useState(null);
 
   const methods = useForm({
     resolver: zodResolver(schema),
@@ -73,34 +71,6 @@ const FlejeForm = ({ data = null, handleConfirm, handleCancel }) => {
     };
   };
 
-  const validateAnomaliesAndConfirm = (formData) => {
-    const normalizedData = normalizeFormData(formData);
-    const hasAnomalies =
-      Number(normalizedData?.espesor) > 6 ||
-      Number(normalizedData?.ancho) > 2000 ||
-      Number(normalizedData?.peso_medio) > 30000;
-
-    if (!hasAnomalies) {
-      handleConfirm(normalizedData);
-      return;
-    }
-
-    setPendingFormData(normalizedData);
-    setOpenAnomalyDialog(true);
-  };
-
-  const handleCloseAnomalyDialog = () => {
-    setOpenAnomalyDialog(false);
-    setPendingFormData(null);
-  };
-
-  const handleConfirmAnomalyDialog = () => {
-    if (pendingFormData) {
-      handleConfirm(pendingFormData);
-    }
-    handleCloseAnomalyDialog();
-  };
-
   // Vigilancia de campos para lógica reactiva
   const watchAncho = watch('ancho');
   const watchEspesor = watch('espesor');
@@ -114,10 +84,13 @@ const FlejeForm = ({ data = null, handleConfirm, handleCancel }) => {
   useEffect(() => {
     if (watchAncho > 0 && watchEspesor > 0) {
       const calidadObj = tiposCalidad.find((c) => c.id === watchCalidadId);
-      const calidadNom = calidadObj ? calidadObj.nombre.toUpperCase() : '';
+      const calidadNom =
+        calidadObj && calidadObj.label_fleje
+          ? calidadObj?.label_fleje.toUpperCase()
+          : '';
 
       const conceptoGenerado =
-        `FLEJE ${calidadNom} ${watchAncho}x${watchEspesor}`.trim();
+        `FLEJE ${calidadNom ? `${calidadNom} ` : ''}${watchAncho}x${watchEspesor}`.trim();
 
       setValue('concepto', conceptoGenerado);
       setValue('art_concepto', conceptoGenerado); // Sincronizado por defecto
@@ -161,13 +134,11 @@ const FlejeForm = ({ data = null, handleConfirm, handleCancel }) => {
     }
   }, [watchPesoMedio, watchUnidades, setValue]);
 
-  console.log('Valores vigilados:', watchActivo);
-
   return (
     <FormProvider {...methods}>
       <Box
         component="form"
-        onSubmit={handleSubmit(validateAnomaliesAndConfirm)}
+        onSubmit={handleSubmit(handleConfirm)}
         sx={{ p: 1 }}
       >
         {/* CABECERA Y ESTADO */}
@@ -232,7 +203,7 @@ const FlejeForm = ({ data = null, handleConfirm, handleCancel }) => {
                 <Grid size={6}>
                   <TextField
                     name="ancho"
-                    label="Ancho"
+                    label="Ancho (mm)"
                     type="number"
                     fullWidth
                     size="small"
@@ -241,20 +212,10 @@ const FlejeForm = ({ data = null, handleConfirm, handleCancel }) => {
                 <Grid size={6}>
                   <TextField
                     name="espesor"
-                    label="Espesor"
+                    label="Espesor (mm)"
                     type="number"
                     fullWidth
                     size="small"
-                  />
-                </Grid>
-                <Grid size={12}>
-                  <TextField
-                    name="concepto"
-                    label="Concepto"
-                    fullWidth
-                    size="small"
-                    helperText="Generado automáticamente"
-                    sx={{ bgcolor: '#f8f9fa' }}
                   />
                 </Grid>
               </Grid>
@@ -294,7 +255,7 @@ const FlejeForm = ({ data = null, handleConfirm, handleCancel }) => {
               <Stack spacing={1}>
                 <TextField
                   name="peso_total"
-                  label="Peso Total (Kg)"
+                  label="Peso Total (kg)"
                   type="number"
                   fullWidth
                   size="small"
@@ -302,14 +263,14 @@ const FlejeForm = ({ data = null, handleConfirm, handleCancel }) => {
                 <Divider />
                 <TextField
                   name="peso_medio"
-                  label="Peso Medio Unitario"
+                  label="Peso Medio Unitario (kg)"
                   type="number"
                   fullWidth
                   size="small"
                   InputProps={{
                     readOnly: true,
                     endAdornment: (
-                      <InputAdornment position="end">Kg/u</InputAdornment>
+                      <InputAdornment position="end">kg/u</InputAdornment>
                     ),
                   }}
                   sx={{ bgcolor: '#e8f0fe' }}
@@ -320,8 +281,8 @@ const FlejeForm = ({ data = null, handleConfirm, handleCancel }) => {
 
           <Grid size={{ xs: 12 }}>
             <TextField
-              name="art_concepto"
-              label="Concepto de Artículo (ERP)"
+              name="concepto"
+              label="Concepto"
               fullWidth
               size="small"
             />
@@ -347,44 +308,6 @@ const FlejeForm = ({ data = null, handleConfirm, handleCancel }) => {
             Guardar
           </Button>
         </Stack>
-
-        <Dialog
-          open={openAnomalyDialog}
-          onClose={handleCloseAnomalyDialog}
-          maxWidth="sm"
-          fullWidth
-        >
-          <DialogTitle>Anomalias detectadas</DialogTitle>
-          <DialogContent>
-            <DialogContentText sx={{ mb: 1.5 }}>
-              Se detectaron valores por encima de los límites esperados.
-            </DialogContentText>
-            <DialogContentText>
-              Espesor: {pendingFormData?.espesor} mm (límite: 6 mm)
-            </DialogContentText>
-            <DialogContentText>
-              Ancho: {pendingFormData?.ancho} mm (límite: 2000 mm)
-            </DialogContentText>
-            <DialogContentText>
-              Peso medio: {pendingFormData?.peso_medio} kg (límite: 30000 kg)
-            </DialogContentText>
-            <DialogContentText sx={{ mt: 1.5 }}>
-              ¿Está seguro de que desea continuar?
-            </DialogContentText>
-          </DialogContent>
-          <DialogActions>
-            <Button
-              onClick={handleCloseAnomalyDialog}
-              color="secondary"
-              variant="contained"
-            >
-              Cancelar
-            </Button>
-            <Button onClick={handleConfirmAnomalyDialog} variant="contained">
-              Confirmar y guardar
-            </Button>
-          </DialogActions>
-        </Dialog>
       </Box>
     </FormProvider>
   );
