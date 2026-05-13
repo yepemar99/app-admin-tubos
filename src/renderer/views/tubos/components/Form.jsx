@@ -32,6 +32,7 @@ import MultiSelect from '../../../components/common/MultiSelect';
 import { DataContext } from '../../../contexts/DataContext';
 import { z } from 'zod';
 import { StatusBullet } from '../../bobinas/components/Form';
+import { formatearConceptoTubo } from '../../../utils/functions';
 
 const tuboSchema = z.object({
   id: z.number().optional(),
@@ -76,6 +77,7 @@ const formatNumber = (value) => {
 const buildMedidaTubo = ({
   tipoNombre,
   calidadNombre,
+  medidaPlantilla,
   alto,
   ancho,
   diametro,
@@ -85,36 +87,22 @@ const buildMedidaTubo = ({
   const tipo = normalizeText(tipoNombre);
   const calidad = normalizeText(calidadNombre);
 
-  let sufijoCalidad = '';
-  if (calidad.includes('galvan')) {
-    sufijoCalidad = ' GALV';
-  } else if (calidad.includes('chapa negra') || calidad === 'negra') {
-    sufijoCalidad = ' N';
-  }
-
   const altoTxt = formatNumber(alto);
   const anchoTxt = formatNumber(ancho);
   const diametroTxt = formatNumber(diametro);
   const espesorTxt = formatNumber(espesor);
   const longitudTxt = formatNumber(longitud);
 
-  let base = '';
+  let base = formatearConceptoTubo(
+    medidaPlantilla,
+    altoTxt,
+    anchoTxt,
+    diametroTxt,
+    espesorTxt,
+  );
 
-  if (tipo.includes('rectang')) {
-    base = `${altoTxt}x${anchoTxt}x${espesorTxt}`;
-  } else if (tipo.includes('cuadr')) {
-    const lado = Number(alto) > 0 ? altoTxt : anchoTxt;
-    base = `${lado}x${lado}x${espesorTxt}`;
-  } else if (tipo.includes('redond') || tipo === 'red') {
-    base = `Red ${diametroTxt}x${espesorTxt}`;
-  } else if (tipo.includes('pds')) {
-    const medidaPds = Number(alto) > 0 ? altoTxt : anchoTxt;
-    base = `PDS ${medidaPds}`;
-  } else {
-    base = `${altoTxt}x${anchoTxt}x${espesorTxt}`;
-  }
-
-  let medida = `${base}${sufijoCalidad}`.trim();
+  let medida =
+    `${calidad ? `${calidad.toUpperCase()} ` : ''}${tipo ? `${tipo.toUpperCase()} ` : ''}${base}`.trim();
   if (Number(longitud) > 0 && Number(longitud) !== 6000) {
     medida = `${medida} L${longitudTxt}m`;
   }
@@ -127,8 +115,6 @@ const TuboForm = ({ data = null, handleConfirm, handleCancel }) => {
   const [flejes, setFlejes] = React.useState([]);
   const [loadingFlejes, setLoadingFlejes] = React.useState(false);
   const [conceptoManual, setConceptoManual] = useState(Boolean(data?.id));
-  const [openAnomalyDialog, setOpenAnomalyDialog] = useState(false);
-  const [pendingFormData, setPendingFormData] = useState(null);
 
   const methods = useForm({
     resolver: zodResolver(tuboSchema),
@@ -286,9 +272,13 @@ const TuboForm = ({ data = null, handleConfirm, handleCancel }) => {
   useEffect(() => {
     if (conceptoManual) return;
 
+    const calidad = tiposCalidad.find((c) => c.id === Number(watchCalidad));
+    const tipo = tiposTubos.find((t) => t.id === Number(watchTipo));
+
     const medidaGenerada = buildMedidaTubo({
-      tipoNombre: tipoSeleccionado?.nombre,
-      calidadNombre: calidadSeleccionada?.nombre,
+      tipoNombre: tipo?.prefijo,
+      medidaPlantilla: tipo?.medida,
+      calidadNombre: calidad?.[`label_tubo`] || '',
       alto: watchAlto,
       ancho: watchAncho,
       diametro: watchDiametro,
@@ -332,41 +322,13 @@ const TuboForm = ({ data = null, handleConfirm, handleCancel }) => {
   const validateAnomaliesAndConfirm = (formData) => {
     const normalizedData = normalizeFormData(formData);
     const medida = String(formData.medida || '').trim();
-    const isRectangular = Number(watchTipo) === 2;
 
-    const hasAnomalies =
-      isRectangular &&
-      (Number(normalizedData?.espesor) > 6 ||
-        Number(normalizedData?.ancho) > 2000);
-
-    if (!hasAnomalies) {
-      handleConfirm({
-        ...normalizedData,
-        medida,
-        art_concepto: medida ? `Tubo ${medida}` : '',
-      });
-      return;
-    }
-
-    setPendingFormData(normalizedData);
-    setOpenAnomalyDialog(true);
-  };
-
-  const handleCloseAnomalyDialog = () => {
-    setOpenAnomalyDialog(false);
-    setPendingFormData(null);
-  };
-
-  const handleConfirmAnomalyDialog = () => {
-    if (pendingFormData) {
-      const medida = String(pendingFormData.medida || '').trim();
-      handleConfirm({
-        ...pendingFormData,
-        medida,
-        art_concepto: medida ? `Tubo ${medida}` : '',
-      });
-    }
-    handleCloseAnomalyDialog();
+    handleConfirm({
+      ...normalizedData,
+      medida,
+      art_concepto: medida ? `Tubo ${medida}` : '',
+    });
+    return;
   };
 
   return (
@@ -667,42 +629,6 @@ const TuboForm = ({ data = null, handleConfirm, handleCancel }) => {
             Guardar
           </Button>
         </Stack>
-
-        <Dialog
-          open={openAnomalyDialog}
-          onClose={handleCloseAnomalyDialog}
-          maxWidth="sm"
-          fullWidth
-        >
-          <DialogTitle>Anomalias detectadas</DialogTitle>
-          <DialogContent>
-            <DialogContentText sx={{ mb: 1.5 }}>
-              Se detectaron valores por encima de los limites esperados para
-              tubos rectangulares.
-            </DialogContentText>
-            <DialogContentText>
-              Espesor: {pendingFormData?.espesor} mm (limite: 6 mm)
-            </DialogContentText>
-            <DialogContentText>
-              Ancho: {pendingFormData?.ancho} mm (limite: 2000 mm)
-            </DialogContentText>
-            <DialogContentText sx={{ mt: 1.5 }}>
-              Está seguro de que desea continuar?
-            </DialogContentText>
-          </DialogContent>
-          <DialogActions>
-            <Button
-              onClick={handleCloseAnomalyDialog}
-              color="secondary"
-              variant="contained"
-            >
-              Cancelar
-            </Button>
-            <Button onClick={handleConfirmAnomalyDialog} variant="contained">
-              Confirmar y guardar
-            </Button>
-          </DialogActions>
-        </Dialog>
       </Box>
     </FormProvider>
   );

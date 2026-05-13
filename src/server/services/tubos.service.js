@@ -113,7 +113,7 @@ export async function listarTiposTubosService() {
   try {
     const conn = database.getConnection();
     const query = `
-      SELECT id, nombre
+      SELECT id, nombre, prefijo, medida
       FROM Tipos_Tubos
       ORDER BY nombre ASC
     `;
@@ -122,6 +122,8 @@ export async function listarTiposTubosService() {
       data: rows.map((row) => ({
         id: Number(row.id),
         nombre: row.nombre,
+        prefijo: row.prefijo,
+        medida: row.medida,
       })),
       total: rows.length,
     };

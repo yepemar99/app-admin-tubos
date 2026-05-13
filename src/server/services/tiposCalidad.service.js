@@ -29,6 +29,7 @@ export async function listarTodosTiposCalidadService() {
         nombre: row.nombre,
         label_bobina: row.label_bobina,
         label_fleje: row.label_fleje,
+        label_tubo: row.label_tubo,
         creado: row.creado,
       })),
       total,

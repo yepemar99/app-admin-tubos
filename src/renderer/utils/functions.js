@@ -79,3 +79,19 @@ export const resolveSortParams = (model = [], sortFieldMap) => {
     orderDir: safeDir,
   };
 };
+
+export const formatearConceptoTubo = (
+  plantilla,
+  altoTxt,
+  anchoTxt,
+  diametroTxt,
+  espesorTxt,
+) => {
+  if (!plantilla) return '';
+
+  return plantilla
+    .replace(/altoTxt/g, altoTxt)
+    .replace(/anchoTxt/g, anchoTxt)
+    .replace(/diametroTxt/g, diametroTxt)
+    .replace(/espesorTxt/g, espesorTxt);
+};
