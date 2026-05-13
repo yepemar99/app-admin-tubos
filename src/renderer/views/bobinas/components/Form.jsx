@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
@@ -30,12 +30,10 @@ const schema = z
       .number({ invalid_type_error: 'Seleccione una calidad' })
       .positive(),
     concepto: z.string().min(1, 'El concepto es obligatorio'),
-    art_concepto: z.string().min(1, 'El concepto de artículo es obligatorio'),
     espesor: z.number().positive('Debe ser mayor a 0'), // Flotante
     ancho: z.number().positive('Debe ser mayor a 0'), // Flotante
     peso_medio: z.number().nonnegative(),
     activa: z.boolean(),
-    art_concepto: z.string().min(1, 'El concepto de artículo es obligatorio'),
     unidades: z.number().int().positive(), // Entero
   })
   .superRefine((values, ctx) => {
@@ -95,6 +93,7 @@ const BobinaForm = ({ data = null, handleConfirm, handleCancel }) => {
     const hasAnomalies =
       Number(normalizedData?.espesor) > 6 ||
       Number(normalizedData?.ancho) > 2000 ||
+      Number(normalizedData?.ancho) < 1000 ||
       Number(normalizedData?.peso_medio) > 30000;
 
     if (!hasAnomalies) {
@@ -142,13 +141,62 @@ const BobinaForm = ({ data = null, handleConfirm, handleCancel }) => {
       ancho: data?.ancho || 0,
       peso_medio: data?.peso_medio || 0,
       activa: data?.activa ? true : false,
-      art_concepto: data?.art_concepto || '',
       unidades: data?.unidades || 1,
     },
   });
 
   const { handleSubmit, watch, setValue } = methods;
   const isActiva = watch('activa');
+  const watchFabricanteId = watch('fabricante_id');
+  const watchFabricanteNombre = watch('fabricante');
+  const watchCalidadId = watch('calidad_id');
+  const watchEspesor = watch('espesor');
+  const watchAncho = watch('ancho');
+
+  // Efecto para generar el CONCEPTO automáticamente
+  useEffect(() => {
+    if (watchEspesor > 0 && watchAncho > 0 && watchCalidadId) {
+      // Obtener nombre del fabricante
+      let fabricanteNom = '';
+      if (useFabricanteInput) {
+        fabricanteNom = String(watchFabricanteNombre || '')
+          .trim()
+          .toUpperCase();
+      } else if (watchFabricanteId) {
+        const fabricanteObj = fabricantes.find(
+          (f) => f.id === watchFabricanteId,
+        );
+        fabricanteNom =
+          fabricanteObj && fabricanteObj.nombre
+            ? fabricanteObj?.nombre.toUpperCase()
+            : '';
+      }
+
+      // Obtener nombre del material (calidad)
+      const calidadObj = tiposCalidad.find((c) => c.id === watchCalidadId);
+      const materialNom =
+        calidadObj && calidadObj.label_bobina
+          ? calidadObj?.label_bobina.toUpperCase()
+          : '';
+
+      // Generar concepto
+      if (fabricanteNom) {
+        const conceptoGenerado =
+          `BOBINA ${materialNom} ${fabricanteNom} ${watchEspesor}x${watchAncho}`.trim();
+        setValue('concepto', conceptoGenerado);
+      }
+    }
+  }, [
+    watchEspesor,
+    watchAncho,
+    watchCalidadId,
+    watchFabricanteId,
+    watchFabricanteNombre,
+    useFabricanteInput,
+    fabricantes,
+    tiposCalidad,
+    setValue,
+  ]);
 
   return (
     <FormProvider {...methods}>
@@ -241,15 +289,6 @@ const BobinaForm = ({ data = null, handleConfirm, handleCancel }) => {
                 fullWidth
               />
             </Grid>
-
-            <Grid size={{ xs: 12 }}>
-              <TextField
-                size="small"
-                name="concepto"
-                label="Concepto General"
-                fullWidth
-              />
-            </Grid>
           </Grid>
         </Paper>
 
@@ -301,7 +340,7 @@ const BobinaForm = ({ data = null, handleConfirm, handleCancel }) => {
             <Grid size={{ xs: 12, sm: 8 }}>
               <TextField
                 size="small"
-                name="art_concepto"
+                name="concepto"
                 label="Concepto detallado"
                 fullWidth
               />
@@ -344,15 +383,24 @@ const BobinaForm = ({ data = null, handleConfirm, handleCancel }) => {
             <DialogContentText sx={{ mb: 1.5 }}>
               Se detectaron valores por encima de los límites esperados.
             </DialogContentText>
-            <DialogContentText>
-              Espesor: {pendingFormData?.espesor} mm (límite: 6 mm)
-            </DialogContentText>
-            <DialogContentText>
-              Ancho: {pendingFormData?.ancho} mm (límite: 2000 mm)
-            </DialogContentText>
-            <DialogContentText>
-              Peso medio: {pendingFormData?.peso_medio} kg (límite: 30000 kg)
-            </DialogContentText>
+            {pendingFormData?.espesor > 6 && (
+              <DialogContentText>
+                Espesor: {pendingFormData?.espesor} mm (límite: 6 mm)
+              </DialogContentText>
+            )}
+            {(pendingFormData?.ancho < 1000 ||
+              pendingFormData?.ancho > 2000) && (
+              <DialogContentText>
+                Ancho: {pendingFormData?.ancho} mm (límite mínimo: 1000 mm y
+                máximo: 2000 mm)
+              </DialogContentText>
+            )}
+
+            {pendingFormData?.peso_medio > 30000 && (
+              <DialogContentText>
+                Peso medio: {pendingFormData?.peso_medio} kg (límite: 30000 kg)
+              </DialogContentText>
+            )}
             <DialogContentText sx={{ mt: 1.5 }}>
               ¿Está seguro de que desea continuar?
             </DialogContentText>

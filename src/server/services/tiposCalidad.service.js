@@ -27,6 +27,7 @@ export async function listarTodosTiposCalidadService() {
       data: rows.map((row) => ({
         id: Number(row.id),
         nombre: row.nombre,
+        label_bobina: row.label_bobina,
         creado: row.creado,
       })),
       total,

@@ -109,8 +109,6 @@ const PlanesForm = ({
         (flejeSeleccionado.ancho * current.num_flejes) /
         watch('ancho_estipulado');
 
-      console.log('leje seleccionado seleccionado:', flejeSeleccionado);
-      console.log('factor', factor);
       append({
         fleje_id: current.fleje_id,
         num_flejes: Number(current.num_flejes),

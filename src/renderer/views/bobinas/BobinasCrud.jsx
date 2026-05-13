@@ -47,12 +47,18 @@ const BobinasCrud = () => {
   };
 
   const onCreate = async (data) => {
-    return await window.api.bobinas.create(data);
+    return await window.api.bobinas.create({
+      ...data,
+      art_concepto: data.concepto,
+    });
   };
 
   const onEdit = async (data) => {
     console.log('Update:', data);
-    return await window.api.bobinas.update({ bobina: data, id: data?.id });
+    return await window.api.bobinas.update({
+      bobina: { ...data, art_concepto: data.concepto },
+      id: data?.id,
+    });
   };
 
   const onDelete = async (id) => {
