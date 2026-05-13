@@ -56,6 +56,54 @@ function resolveOutputFilePath(destinationPath = '') {
   );
 }
 
+async function recalcularInventarioTubos({ salida_paq_id, tubo_id, num_paqs }) {
+  const conn = database.getConnection();
+
+  if (salida_paq_id) {
+    const querySelectSalida = `
+      SELECT tubo_id, num_paqs
+      FROM Salidas_Paqs_Tubos
+      WHERE id = ?
+    `;
+    const resultSelectSalida = await conn.query(querySelectSalida, [
+      salida_paq_id,
+    ]);
+    const salida = resultSelectSalida[0];
+    if (!salida) {
+      throw new Error(
+        'Salida de paquetes no encontrada para recalculo de inventario',
+      );
+    }
+    const paquetesSumar = Number(salida.num_paqs || 0);
+
+    const queryUpdateInventarioViejo = `UPDATE Tubos 
+     SET num_paquetes = num_paquetes + ?, unidades = (num_paquetes + ?)*num_por_paq, peso_total = peso_unitario * (num_paquetes + ?)*num_por_paq
+     WHERE id = ?
+    `;
+
+    await conn.query(queryUpdateInventarioViejo, [
+      paquetesSumar,
+      paquetesSumar,
+      paquetesSumar,
+      salida.tubo_id,
+    ]);
+  }
+
+  if (tubo_id && Number(num_paqs) >= 0) {
+    const paquetesRestar = Number(num_paqs || 0);
+    const queryUpdateInventarioNuevo = `UPDATE Tubos 
+     SET num_paquetes = num_paquetes - ?, unidades = (num_paquetes - ?)*num_por_paq, peso_total = peso_unitario * (num_paquetes - ?)*num_por_paq
+     WHERE id = ?
+    `;
+    await conn.query(queryUpdateInventarioNuevo, [
+      paquetesRestar,
+      paquetesRestar,
+      paquetesRestar,
+      tubo_id,
+    ]);
+  }
+}
+
 export const listarSalidaPaquetes = async ({
   page = 1,
   pageSize = 20,
@@ -141,7 +189,8 @@ export const listarSalidaPaquetes = async ({
              o.nombre AS operario_nombre,
              o.apellido1 AS operario_apellido1,
               o.apellido2 AS operario_apellido2,
-             t.medida AS tubo_medida
+             t.medida AS tubo_medida,
+             t.art_concepto AS tubo_concepto
       FROM Salidas_Paqs_Tubos s
       LEFT JOIN Operarios o ON s.operario_id = o.id
       LEFT JOIN Tubos t ON s.tubo_id = t.id
@@ -163,6 +212,7 @@ export const listarSalidaPaquetes = async ({
           tubo_medida: row.tubo_medida || 'N/A',
           num_paqs: Number(row.num_paqs),
           creado: row.creado,
+          tubo_concepto: row.tubo_concepto || 'N/A',
         };
       }),
       total,
@@ -533,6 +583,11 @@ export const crearSalidaPaquetes = async ({
   num_paqs,
 }) => {
   try {
+    await recalcularInventarioTubos({
+      salida_paq_id: null,
+      tubo_id,
+      num_paqs,
+    });
     const conn = database.getConnection();
     const insertQuery = `
       INSERT INTO Salidas_Paqs_Tubos (operario_id, tubo_id, num_paqs)
@@ -552,6 +607,11 @@ export const crearSalidaPaquetes = async ({
 
 export const eliminarSalidaPaquetes = async (id) => {
   try {
+    await recalcularInventarioTubos({
+      salida_paq_id: id,
+      tubo_id: null,
+      num_paqs: null,
+    });
     const conn = database.getConnection();
     const deleteQuery = `
       DELETE FROM Salidas_Paqs_Tubos
@@ -567,6 +627,11 @@ export const eliminarSalidaPaquetes = async (id) => {
 
 export const actualizarSalidaPaquetes = async ({ id, data }) => {
   try {
+    await recalcularInventarioTubos({
+      salida_paq_id: id,
+      tubo_id: data.tubo_id,
+      num_paqs: data.num_paqs,
+    });
     const conn = database.getConnection();
     const updateQuery = `
       UPDATE Salidas_Paqs_Tubos

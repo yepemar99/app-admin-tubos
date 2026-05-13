@@ -1,30 +1,31 @@
-import React, { useContext } from "react";
-import { useForm, FormProvider } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Box, Button, Grid, Paper, Typography, Stack } from "@mui/material";
-import { Person, FilterList } from "@mui/icons-material";
-import TextField from "../../../components/common/Textfield";
-import Select from "../../../components/common/Select";
-import { DataContext } from "../../../contexts/DataContext";
-import { toast } from "react-toastify";
-import { z } from "zod";
+import React, { useContext } from 'react';
+import { useForm, FormProvider } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Box, Button, Grid, Paper, Typography, Stack } from '@mui/material';
+import { Person, FilterList } from '@mui/icons-material';
+import TextField from '../../../components/common/Textfield';
+import Select from '../../../components/common/Select';
+import { DataContext } from '../../../contexts/DataContext';
+import { toast } from 'react-toastify';
+import { set, z } from 'zod';
+import Modal from '../../../components/common/Modal';
 
 const salidaSchema = z.object({
   id: z.number().optional(),
   operario_id: z
-    .number({ invalid_type_error: "Seleccione un operario" })
-    .positive("Requerido"),
+    .number({ invalid_type_error: 'Seleccione un operario' })
+    .positive('Requerido'),
   calidad_id: z
-    .number({ invalid_type_error: "Seleccione la calidad" })
-    .positive("Requerido"),
+    .number({ invalid_type_error: 'Seleccione la calidad' })
+    .positive('Requerido'),
   tubo_id: z
-    .number({ invalid_type_error: "Seleccione el tubo" })
-    .positive("Requerido"),
+    .number({ invalid_type_error: 'Seleccione el tubo' })
+    .positive('Requerido'),
   num_paqs: z.coerce
     .number()
-    .int("Debe ser un número entero")
-    .positive("Debe ser mayor a 0"),
-  fecha: z.string().min(1, "La fecha es obligatoria"),
+    .int('Debe ser un número entero')
+    .positive('Debe ser mayor a 0'),
+  fecha: z.string().min(1, 'La fecha es obligatoria'),
   observacion: z.string().optional(),
 });
 
@@ -33,22 +34,25 @@ const SalidaTuboForm = ({ data, handleConfirm, handleCancel }) => {
   const { operarios, tiposCalidad } = useContext(DataContext);
   const [tubos, setTubos] = React.useState([]);
   const [loadingTubos, setLoadingTubos] = React.useState(false);
+  const [msgError, setMsgError] = React.useState('');
+  const [showModalError, setShowModalError] = React.useState(false);
+  const [pendingFormData, setPendingFormData] = React.useState(null);
 
   const methods = useForm({
     resolver: zodResolver(salidaSchema),
     defaultValues: {
-      operario_id: data?.operario_id || "",
-      calidad_id: data?.calidad_id || "",
-      tubo_id: data?.tubo_id || "",
+      operario_id: data?.operario_id || '',
+      calidad_id: data?.calidad_id || '',
+      tubo_id: data?.tubo_id || '',
       num_paqs: data?.num_paqs || 1,
-      fecha: data?.creado || new Date().toISOString().split("T")[0],
-      observacion: data?.observacion || "",
+      fecha: data?.creado || new Date().toISOString().split('T')[0],
+      observacion: data?.observacion || '',
     },
   });
 
   const { handleSubmit, watch, setValue, reset } = methods;
 
-  const watchCalidadId = watch("calidad_id");
+  const watchCalidadId = watch('calidad_id');
   const prevCalidadIdRef = React.useRef();
 
   const loadTubos = async (tipoCalidad_id) => {
@@ -62,22 +66,56 @@ const SalidaTuboForm = ({ data, handleConfirm, handleCancel }) => {
       return result?.data || [];
     } catch (err) {
       setLoadingTubos(false);
-      toast.error(err?.message || "Error al cargar tubos");
+      toast.error(err?.message || 'Error al cargar tubos');
       return [];
+    }
+  };
+
+  const handleFormSubmit = async (formData) => {
+    try {
+      if (
+        data?.tubo_id !== formData.tubo_id ||
+        data?.num_paqs < formData.num_paqs
+      ) {
+        const tuboResult = await window.api.tubos.getAll({
+          tubo_id: formData.tubo_id,
+          pageSize: 1,
+        });
+        const tuboSeleccionado = tuboResult?.data?.[0];
+        if (!tuboSeleccionado) {
+          toast.error('Tubo seleccionado no encontrado');
+          return;
+        }
+        if (tuboSeleccionado.num_paquetes < formData.num_paqs) {
+          setMsgError(
+            'Este tubo solo tiene ' +
+              tuboSeleccionado.num_paquetes +
+              ' paquetes disponibles y se están intentando sacar ' +
+              formData.num_paqs,
+          );
+          setPendingFormData(formData);
+          setShowModalError(true);
+          return;
+        }
+      }
+
+      await handleConfirm(formData);
+    } catch (error) {
+      toast.error(error?.message || 'Error al enviar el formulario');
     }
   };
 
   React.useEffect(() => {
     const resetValues = {
       id: data?.id || undefined,
-      operario_id: data?.operario_id || "",
-      calidad_id: data?.calidad_id || "",
-      tubo_id: data?.tubo_id || "",
+      operario_id: data?.operario_id || '',
+      calidad_id: data?.calidad_id || '',
+      tubo_id: data?.tubo_id || '',
       num_paqs: data?.num_paqs || 1,
       fecha: data?.creado
-        ? new Date(data?.creado).toISOString().split("T")[0]
-        : new Date().toISOString().split("T")[0],
-      observacion: data?.observacion || "",
+        ? new Date(data?.creado).toISOString().split('T')[0]
+        : new Date().toISOString().split('T')[0],
+      observacion: data?.observacion || '',
     };
 
     prevCalidadIdRef.current = resetValues.calidad_id || undefined;
@@ -88,7 +126,7 @@ const SalidaTuboForm = ({ data, handleConfirm, handleCancel }) => {
     const syncTubosByCalidad = async () => {
       if (!watchCalidadId) {
         setTubos([]);
-        setValue("tubo_id", "");
+        setValue('tubo_id', '');
         prevCalidadIdRef.current = undefined;
         return;
       }
@@ -99,7 +137,7 @@ const SalidaTuboForm = ({ data, handleConfirm, handleCancel }) => {
         prevCalidadIdRef.current &&
         prevCalidadIdRef.current !== watchCalidadId
       ) {
-        setValue("tubo_id", "");
+        setValue('tubo_id', '');
       }
 
       prevCalidadIdRef.current = watchCalidadId;
@@ -122,10 +160,10 @@ const SalidaTuboForm = ({ data, handleConfirm, handleCancel }) => {
         const tuboEncontrado = result?.data?.[0];
 
         if (tuboEncontrado?.calidad_id) {
-          setValue("calidad_id", tuboEncontrado.calidad_id);
+          setValue('calidad_id', tuboEncontrado.calidad_id);
         }
       } catch (err) {
-        toast.error(err?.message || "Error al resolver calidad del tubo");
+        toast.error(err?.message || 'Error al resolver calidad del tubo');
       }
     };
 
@@ -137,14 +175,14 @@ const SalidaTuboForm = ({ data, handleConfirm, handleCancel }) => {
       <Box
         component="form"
         onSubmit={handleSubmit((formData) => {
-          handleConfirm(formData);
+          handleFormSubmit(formData);
         })}
         sx={{ p: 2 }}
       >
         <Grid container spacing={3}>
           {/* SECCIÓN DATOS DE CONTROL (Operario y Fecha) */}
           <Grid size={{ xs: 12 }}>
-            <Paper variant="outlined" sx={{ p: 2, bgcolor: "#f8f9fa" }}>
+            <Paper variant="outlined" sx={{ p: 2, bgcolor: '#f8f9fa' }}>
               <Stack
                 direction="row"
                 spacing={1}
@@ -166,7 +204,7 @@ const SalidaTuboForm = ({ data, handleConfirm, handleCancel }) => {
                     options={
                       operarios?.map((o) => ({
                         value: o.id,
-                        label: o.nombre_completo || "",
+                        label: o.nombre_completo || '',
                       })) || []
                     }
                     fullWidth
@@ -207,7 +245,7 @@ const SalidaTuboForm = ({ data, handleConfirm, handleCancel }) => {
                       })) || []
                     }
                     onChange={(val) => {
-                      setValue("calidad_id", val);
+                      setValue('calidad_id', val);
                       loadTubos(val);
                     }}
                     fullWidth
@@ -221,14 +259,14 @@ const SalidaTuboForm = ({ data, handleConfirm, handleCancel }) => {
                     name="tubo_id"
                     label={
                       watchCalidadId
-                        ? "Seleccionar Tubo"
-                        : "Primero seleccione una calidad"
+                        ? 'Seleccionar Tubo'
+                        : 'Primero seleccione una calidad'
                     }
                     disabled={!watchCalidadId}
                     loading={loadingTubos}
                     options={tubos.map((p) => ({
                       value: p.id,
-                      label: p.medida || `Tubo ID: ${p.id}`,
+                      label: p.concepto || `N/A`,
                     }))}
                     fullWidth
                   />
@@ -286,6 +324,22 @@ const SalidaTuboForm = ({ data, handleConfirm, handleCancel }) => {
           </Button>
         </Stack>
       </Box>
+      <Modal
+        open={showModalError}
+        title="Inventario insuficiente"
+        showCustom
+        showCancel
+        customText="Continuar"
+        handleClose={() => setShowModalError(false)}
+        handleCancel={() => setShowModalError(false)}
+        handleCustom={() => {
+          setShowModalError(false);
+          handleConfirm(pendingFormData);
+          setPendingFormData(null);
+        }}
+      >
+        <Typography>{msgError}</Typography>
+      </Modal>
     </FormProvider>
   );
 };

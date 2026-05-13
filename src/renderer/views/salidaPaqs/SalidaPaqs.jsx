@@ -1,6 +1,6 @@
 import React from 'react';
 import useDataTable from '../../hooks/useDataTable';
-import { Box, Button, Modal, Typography } from '@mui/material';
+import { Box, Button, Typography } from '@mui/material';
 import LoadingModal from '../../components/common/LoadingModal';
 import ViewHeaderLayout from '../../layouts/ViewHeaderLayout';
 import { Add } from '@mui/icons-material';
@@ -12,6 +12,7 @@ import DataFilters from '../../components/common/DataFilters';
 import { initFilters } from './utils';
 import InformePaqs from '../tubos/components/Informe';
 import { toast } from 'react-toastify';
+import Modal from '../../components/common/Modal';
 
 const SalidaPaqs = () => {
   const loadSalidasPaqs = async (
@@ -43,7 +44,7 @@ const SalidaPaqs = () => {
   };
 
   const onDeleteConfirm = async (id) => {
-    return await window.api.salidasPaqs.delete(id);
+    return await window.api.salidasPaqs.delete({ id: id });
   };
 
   const {

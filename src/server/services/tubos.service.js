@@ -76,20 +76,31 @@ export async function listarTodosTubosService({ calidad_id = null }) {
     const countResult = await conn.query(countQuery);
     const total = countResult[0]?.total ? Number(countResult[0].total) : 0;
 
+    let orderBySQL = orderQuery({
+      secondaryOrderCols: [
+        'tc.nombre',
+        't.espesor',
+        'tt.nombre',
+        't.ancho',
+        't.alto',
+        't.diametro',
+        't.id',
+      ],
+      safeOrderBy: '',
+      safeOrderDir: '',
+    });
+
     const selectQuery = `
-      WITH TubosCTE AS (
-        SELECT 
-          id, 
-          medida, 
-          creado,
-          calidad_id, 
-          ROW_NUMBER() OVER (ORDER BY creado DESC) AS rn
-        FROM Tubos
-        WHERE ${whereSQL}
-        ORDER BY medida ASC 
-      )
-      SELECT *
-      FROM TubosCTE
+      SELECT 
+          t.id, 
+          t.art_concepto, 
+          t.medida,
+          t.calidad_id
+      FROM Tubos AS t
+      LEFT JOIN Tipos_Calidad AS tc ON t.calidad_id = tc.id
+      LEFT JOIN Tipos_Tubos AS tt ON t.tipo_id = tt.id
+      WHERE ${whereSQL}
+      ORDER BY ${orderBySQL}
     `;
 
     const rows = await conn.query(selectQuery);
@@ -98,6 +109,7 @@ export async function listarTodosTubosService({ calidad_id = null }) {
       data: rows.map((row) => ({
         id: Number(row.id),
         medida: row.medida,
+        concepto: row.art_concepto,
         creado: row.creado,
         calidad_id: row.calidad_id ? Number(row.calidad_id) : null,
       })),
@@ -263,8 +275,6 @@ export async function listarTubosService({
       OFFSET ${offset} ROWS FETCH NEXT ${safePageSize} ROWS ONLY
     `;
 
-    console.log('Consulta SQL listarTubosService:', selectQuery);
-
     const rows = await conn.query(selectQuery);
 
     return {
@@ -291,7 +301,7 @@ export async function listarTubosService({
           calidad_nombre: row.calidad_nombre || 'N/A',
           tipo_id: Number(row.tipo_id),
           unidades: Number(row.unidades),
-          num_paquetes: Number(row.num_por_paq),
+          num_paquetes: Number(row.num_paquetes),
           tipo_nombre: row.tipo_nombre || 'N/A',
           maquinas,
           maquina: maquinas.map((item) => item.maquina).join(', ') || 'N/A',

@@ -1,11 +1,11 @@
-import { DataGrid } from "@mui/x-data-grid";
-import React from "react";
-import { PAGE_SIZE, ROW_HEIGHT } from "../../../../utils/constants";
-import { Stack, Typography } from "@mui/material";
-import ActionMenu from "../../../components/common/ActionMenu";
-import DataGridFooter from "../../../components/common/DataGridFooter";
-import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
-import { formatFecha } from "../../../../server/utils/functions";
+import { DataGrid } from '@mui/x-data-grid';
+import React from 'react';
+import { PAGE_SIZE, ROW_HEIGHT } from '../../../../utils/constants';
+import { Stack, Typography } from '@mui/material';
+import ActionMenu from '../../../components/common/ActionMenu';
+import DataGridFooter from '../../../components/common/DataGridFooter';
+import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
+import { formatFecha } from '../../../../server/utils/functions';
 
 const SalidasPaqsTable = ({
   loading = false,
@@ -19,7 +19,7 @@ const SalidasPaqsTable = ({
 }) => {
   return (
     <DataGrid
-      sx={{ maxHeight: "calc(100vh - 200px)", width: "100%" }}
+      sx={{ maxHeight: 'calc(100vh - 200px)', width: '100%' }}
       density="standard"
       loading={loading}
       rowCount={total}
@@ -57,10 +57,10 @@ export default SalidasPaqsTable;
 
 const getColumns = (handleDetail, handleEdit, handleDelete) => [
   {
-    field: "id",
-    headerName: "ID",
+    field: 'id',
+    headerName: 'ID',
     editable: false,
-    align: "left",
+    align: 'left',
     width: 5,
     renderCell: (params) => (
       <Stack
@@ -70,16 +70,16 @@ const getColumns = (handleDetail, handleEdit, handleDelete) => [
         justifyContent="center"
       >
         <Typography variant="body2" fontWeight={500}>
-          {params?.row?.id || "-"}
+          {params?.row?.id || '-'}
         </Typography>
       </Stack>
     ),
   },
   {
-    field: "tubo_medida",
-    headerName: "Tubo",
+    field: 'tubo_medida',
+    headerName: 'Tubo',
     editable: false,
-    align: "left",
+    align: 'left',
     flex: 1,
     renderCell: (params) => (
       <Stack
@@ -89,16 +89,16 @@ const getColumns = (handleDetail, handleEdit, handleDelete) => [
         justifyContent="center"
       >
         <Typography variant="body2" fontWeight={500}>
-          {params?.row?.tubo_medida || "-"}
+          {params?.row?.tubo_concepto || '-'}
         </Typography>
       </Stack>
     ),
   },
   {
-    field: "operario_nombre",
-    headerName: "Operario",
+    field: 'operario_nombre',
+    headerName: 'Operario',
     editable: false,
-    align: "left",
+    align: 'left',
     flex: 1,
     renderCell: (params) => (
       <Stack
@@ -108,18 +108,18 @@ const getColumns = (handleDetail, handleEdit, handleDelete) => [
         justifyContent="center"
       >
         <Typography variant="body2" fontWeight={500}>
-          {params?.row?.operario_nombre || "-"}{" "}
-          {params?.row?.operario_apellido1 || ""}{" "}
-          {params?.row?.operario_apellido2 || ""}
+          {params?.row?.operario_nombre || '-'}{' '}
+          {params?.row?.operario_apellido1 || ''}{' '}
+          {params?.row?.operario_apellido2 || ''}
         </Typography>
       </Stack>
     ),
   },
   {
-    field: "num_paqs",
-    headerName: "Número de Paquetes",
+    field: 'num_paqs',
+    headerName: 'Número de Paquetes',
     editable: false,
-    align: "left",
+    align: 'left',
     width: 200,
     renderCell: (params) => (
       <Stack
@@ -129,16 +129,16 @@ const getColumns = (handleDetail, handleEdit, handleDelete) => [
         justifyContent="center"
       >
         <Typography variant="body2" fontWeight={500}>
-          {params?.row?.num_paqs || "0"}
+          {params?.row?.num_paqs || '0'}
         </Typography>
       </Stack>
     ),
   },
   {
-    field: "creado",
-    headerName: "Fecha de creación",
+    field: 'creado',
+    headerName: 'Fecha de creación',
     editable: false,
-    align: "center",
+    align: 'center',
     width: 200,
     renderCell: (params) => {
       return (
@@ -148,7 +148,7 @@ const getColumns = (handleDetail, handleEdit, handleDelete) => [
           alignSelf="center"
           justifyContent="center"
         >
-          <Typography variant="body2" textAlign={"start"} fontWeight={500}>
+          <Typography variant="body2" textAlign={'start'} fontWeight={500}>
             {formatFecha(params?.row?.creado)}
           </Typography>
         </Stack>
@@ -156,10 +156,10 @@ const getColumns = (handleDetail, handleEdit, handleDelete) => [
     },
   },
   {
-    field: "actions",
-    headerName: "Actions",
+    field: 'actions',
+    headerName: 'Actions',
     editable: false,
-    align: "center",
+    align: 'center',
     renderCell: (params) => (
       <Stack
         height={1}
