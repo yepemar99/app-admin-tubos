@@ -21,6 +21,7 @@ const BobinasTable = ({
   handleChangePage = () => {},
   handleSelect = () => {},
   handleSortChange = () => {},
+  handleToggleBobinasCortadas = () => {},
 }) => {
   return (
     <DataGrid
@@ -40,7 +41,12 @@ const BobinasTable = ({
       onRowSelectionModelChange={(row) => {
         handleSelect(row?.ids || [], row?.type);
       }}
-      columns={getColumns(handleDetail, handleEdit, handleDelete)}
+      columns={getColumns(
+        handleDetail,
+        handleEdit,
+        handleDelete,
+        handleToggleBobinasCortadas,
+      )}
       rows={rows}
       rowHeight={ROW_HEIGHT}
       paginationModel={{
@@ -67,7 +73,12 @@ const BobinasTable = ({
 
 export default BobinasTable;
 
-const getColumns = (handleDetail, handleEdit, handleDelete) => [
+const getColumns = (
+  handleDetail,
+  handleEdit,
+  handleDelete,
+  handleToggleBobinasCortadas,
+) => [
   {
     field: 'id',
     headerName: 'ID',
@@ -220,6 +231,16 @@ const getColumns = (handleDetail, handleEdit, handleDelete) => [
           onDetail={() => {
             handleDetail(params.row);
           }}
+          options={[
+            {
+              icon: 'cutting_plan',
+              label: 'Bobinas Cortadas',
+              onHandle: () => {
+                handleToggleBobinasCortadas(params.row);
+              },
+              id: 'bobinas_cortadas',
+            },
+          ]}
         >
           <MoreHorizIcon />
         </ActionMenu>

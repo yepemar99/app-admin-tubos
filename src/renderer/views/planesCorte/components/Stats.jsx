@@ -90,7 +90,7 @@ const PlanCorteMultiView = ({ id = 0 }) => {
       }
     };
     fetchData();
-  }, [id, pageBobinas]);
+  }, [id, pageBobinas, pageFlejes]);
 
   // Columnas para Bobinas
   const bobinaColumns = [

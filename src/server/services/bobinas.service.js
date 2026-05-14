@@ -452,7 +452,7 @@ export async function listarBobinasCortadasService({
     const countResult = await conn.query(queryCount);
 
     let orderBySQL = orderQuery({
-      secondaryOrderCols: ['b.id', 'tc.nombre', 'b.concepto'],
+      secondaryOrderCols: ['bc.id', 'tc.nombre', 'b.concepto'],
       safeOrderBy,
       safeOrderDir,
     });
@@ -465,12 +465,14 @@ export async function listarBobinasCortadasService({
         b.ancho, b.espesor, b.peso_medio, 
         t.entrada, t.salida, 
         b.concepto, b.art_concepto,
-        o.nombre, tc.nombre AS calidad
+        o.nombre, tc.nombre AS calidad,
+        pc.id AS plan_num
       FROM Bobinas_Cortadas bc
       JOIN Bobinas b ON bc.bobina_id = b.id
       JOIN Turnos t ON bc.turno_id = t.id
       JOIN Operarios o ON bc.operario_id = o.id
       LEFT JOIN Tipos_Calidad tc ON b.calidad_id = tc.id
+      LEFT JOIN Planes_Corte pc ON bc.plan_corte_id = pc.id
       WHERE ${whereClauses.join(' AND ')}
       ORDER BY ${orderBySQL}
       OFFSET ${offset} ROWS FETCH NEXT ${safePageSize} ROWS ONLY
@@ -482,6 +484,7 @@ export async function listarBobinasCortadasService({
       data: rows.map((row) => ({
         id: Number(row.id),
         calidad: row.calidad,
+        plan_num: row.plan_num,
         peso_real: Number(row.peso_real),
         ancho_inicial: Number(row.ancho_inicial),
         bobina_concepto: row.concepto,

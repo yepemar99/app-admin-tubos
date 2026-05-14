@@ -15,10 +15,12 @@ import DataFilters from '../../components/common/DataFilters';
 import { initFilters } from './utils';
 import { DataContext } from '../../contexts/DataContext';
 import { resolveSortParams } from '../../utils/functions';
+import BobinasCortadasModal from './components/BobinasCortadasModal';
 
 const BobinasCrud = () => {
   const { tiposCalidad, handleReloadFabricantes } = useContext(DataContext);
   const [alertDelete, setAlertDelete] = useState(false);
+  const [openBobinasCortadas, setOpenBobinasCortadas] = useState(false);
 
   const sortFieldMap = {
     Calidad: 'calidad',
@@ -202,6 +204,10 @@ const BobinasCrud = () => {
       },
     },
   ];
+  const handleToggleBobinasCortadas = (row) => {
+    setSelectedItem(row);
+    setOpenBobinasCortadas((prev) => !prev);
+  };
 
   return (
     <Box sx={{ width: '100%' }}>
@@ -233,7 +239,12 @@ const BobinasCrud = () => {
       >
         <Typography>Esta acción no se puede deshacer.</Typography>
       </Modal>
-
+      <BobinasCortadasModal
+        id={selectedItem?.id || 0}
+        concepto={selectedItem?.concepto || ''}
+        open={openBobinasCortadas}
+        handleCancel={() => setOpenBobinasCortadas(false)}
+      />
       <BobinasModal
         data={selectedItem}
         open={showForm}
@@ -295,6 +306,7 @@ const BobinasCrud = () => {
         }}
         handleSelect={handleSelectItems}
         handleSortChange={handleManualSort}
+        handleToggleBobinasCortadas={handleToggleBobinasCortadas}
       />
     </Box>
   );

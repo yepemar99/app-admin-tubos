@@ -3,7 +3,11 @@ import React from 'react';
 const DataGrid = {
   defaultProps: {
     disableColumnMenu: true,
+    localeText: {
+      noRowsLabel: 'No hay elementos para mostrar',
+    },
   },
+
   styleOverrides: {
     root: ({ theme }) => ({
       border: '1px solid rgba(0, 0, 0, 0.12)',
