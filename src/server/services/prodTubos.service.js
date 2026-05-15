@@ -45,8 +45,8 @@ const recalcularInventarioTubo = async (
             ELSE ISNULL((unidades - ?) / NULLIF(num_por_paq, 0), 0)
           END,
           peso_total = CASE
-            WHEN peso_total - (unidades - ?)*peso_unitario < 0 THEN 0
-            ELSE peso_total - (unidades - ?)*peso_unitario
+            WHEN (unidades - ?)*peso_unitario < 0 THEN 0
+            ELSE (unidades - ?)*peso_unitario
           END
       WHERE id = ?
     `;
@@ -73,8 +73,8 @@ const recalcularInventarioTubo = async (
             ELSE ISNULL((unidades + ?) / NULLIF(num_por_paq, 0), 0)
           END,
           peso_total = CASE
-            WHEN peso_total + (unidades + ?)*peso_unitario < 0 THEN 0
-            ELSE peso_total + (unidades + ?)*peso_unitario
+            WHEN (unidades + ?)*peso_unitario < 0 THEN 0
+            ELSE (unidades + ?)*peso_unitario
           END
       WHERE id = ?
     `;
@@ -101,8 +101,8 @@ const recalcularInvetarioFleje = async (prod_tubo, tubo_id, cant_tubos = 0) => {
             ELSE peso_total + ?
           END,
           unidades = CASE
-            WHEN unidades + ISNULL(CAST(ROUND((peso_total + ?)/NULLIF(peso_medio, 0), 0) AS INT), 0) < 0 THEN 0
-            ELSE unidades + ISNULL(CAST(ROUND((peso_total + ?)/NULLIF(peso_medio, 0), 0) AS INT), 0)
+            WHEN ISNULL(CAST(ROUND((peso_total + ?)/NULLIF(peso_medio, 0), 0) AS INT), 0) < 0 THEN 0
+            ELSE ISNULL(CAST(ROUND((peso_total + ?)/NULLIF(peso_medio, 0), 0) AS INT), 0)
           END
       WHERE id = ?
     `;
@@ -144,8 +144,8 @@ const recalcularInvetarioFleje = async (prod_tubo, tubo_id, cant_tubos = 0) => {
             ELSE peso_total - ?
           END,
           unidades = CASE
-            WHEN unidades - ISNULL(CAST(ROUND((peso_total - ?) / NULLIF(peso_medio, 0), 0) AS INT), 0) < 0 THEN 0
-            ELSE unidades - ISNULL(CAST(ROUND((peso_total - ?) / NULLIF(peso_medio, 0), 0) AS INT), 0)
+            WHEN ISNULL(CAST(ROUND((peso_total - ?) / NULLIF(peso_medio, 0), 0) AS INT), 0) < 0 THEN 0
+            ELSE ISNULL(CAST(ROUND((peso_total - ?) / NULLIF(peso_medio, 0), 0) AS INT), 0)
           END
       WHERE id = ?
     `;

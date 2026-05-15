@@ -30,7 +30,7 @@ import TextField from '../../../components/common/Textfield';
 import Select from '../../../components/common/Select';
 import MultiSelect from '../../../components/common/MultiSelect';
 import { DataContext } from '../../../contexts/DataContext';
-import { z } from 'zod';
+import { set, z } from 'zod';
 import { StatusBullet } from '../../bobinas/components/Form';
 import { formatearConceptoTubo } from '../../../utils/functions';
 
@@ -52,7 +52,8 @@ const tuboSchema = z.object({
 
   // Pesos y Stock
   peso_unitario: z.coerce.number().min(0), // Masa lineal (kg/m)
-  peso_total: z.coerce.number().min(0), // Peso de la barra completa
+  peso_total: z.coerce.number().min(0), // Peso total de tubos
+  masa_lineal: z.coerce.number().min(0).optional(), // Auxiliar de cálculo
   num_por_paq: z.coerce.number().int().min(1),
   paquetes: z.coerce.number().min(0),
   unidades: z.coerce.number().int().min(0),
@@ -137,6 +138,7 @@ const TuboForm = ({ data = null, handleConfirm, handleCancel }) => {
       diametro: data?.diametro || 0,
       peso_unitario: data?.peso_unitario || 0,
       peso_total: data?.peso_total || 0,
+      masa_lineal: 0,
       num_por_paq: data?.num_por_paq || 1,
       paquetes: data?.num_paquetes || 0,
       unidades: data?.unidades || 0,
@@ -154,6 +156,7 @@ const TuboForm = ({ data = null, handleConfirm, handleCancel }) => {
   const watchLongitud = watch('longitud');
   const watchPesoUnitario = watch('peso_unitario');
   const watchPesoTotal = watch('peso_total');
+  const watchMasaLineal = watch('masa_lineal');
   const watchNumPorPaq = watch('num_por_paq');
   const watchPaquetes = watch('paquetes');
   const watchUnidades = watch('unidades');
@@ -188,21 +191,33 @@ const TuboForm = ({ data = null, handleConfirm, handleCancel }) => {
     }
   }, [watchTipo, setValue]);
 
+  // --- LÓGICA 3: Cálculo de masa_lineal = peso_unitario × (longitud/1000) ---
+  const masaLinealCalculada = watchPesoUnitario * (watchLongitud / 1000);
+
+  // --- LÓGICA 2: Cálculo de peso_total = unidades × peso_unitario ---
   useEffect(() => {
     const active = document.activeElement?.getAttribute('name');
-    if (active === 'peso_unitario' || active === 'longitud') {
-      const total = watchPesoUnitario * (watchLongitud / 1000);
+    if (active === 'peso_unitario' || active === 'unidades') {
+      const total = watchUnidades * watchPesoUnitario;
       setValue('peso_total', parseFloat(total.toFixed(3)));
     }
-  }, [watchPesoUnitario, watchLongitud, setValue]);
+  }, [watchUnidades, watchPesoUnitario, setValue]);
+
+  // Sincronizar masa_lineal cuando peso_unitario o longitud cambian
+  useEffect(() => {
+    const active = document.activeElement?.getAttribute('name');
+    if (active !== 'masa_lineal') {
+      setValue('masa_lineal', parseFloat(masaLinealCalculada.toFixed(2)));
+    }
+  }, [masaLinealCalculada, setValue]);
 
   useEffect(() => {
     const active = document.activeElement?.getAttribute('name');
-    if (active === 'peso_total' && watchLongitud > 0) {
-      const unitario = watchPesoTotal / (watchLongitud / 1000);
-      setValue('peso_unitario', parseFloat(unitario.toFixed(3)));
+    if (active === 'masa_lineal') {
+      const nuevoPesoUnitario = watchMasaLineal / (watchLongitud / 1000);
+      setValue('peso_unitario', parseFloat(nuevoPesoUnitario.toFixed(2)));
     }
-  }, [watchPesoTotal, watchLongitud, setValue]);
+  }, [watchMasaLineal, setValue]);
 
   useEffect(() => {
     const active = document.activeElement?.getAttribute('name');
@@ -484,28 +499,52 @@ const TuboForm = ({ data = null, handleConfirm, handleCancel }) => {
               >
                 <Scale fontSize="small" color="action" />
                 <Typography variant="subtitle2" fontWeight="bold">
-                  Peso y Masa Lineal
+                  Cálculo de Pesos
                 </Typography>
               </Stack>
               <Stack spacing={2}>
-                <TextField
-                  size="small"
-                  name="peso_unitario"
-                  label="Masa Lineal (Kg/m)"
-                  type="number"
-                  helperText="Peso de 1 metro de tubo"
-                />
-                <TextField
-                  size="small"
-                  name="peso_total"
-                  label="Peso Total de la Barra (Kg)"
-                  type="number"
-                  InputProps={{
-                    endAdornment: (
-                      <InputAdornment position="end">Kg/barra</InputAdornment>
-                    ),
-                  }}
-                />
+                <Grid container spacing={2}>
+                  <Grid size={{ xs: 12 }}>
+                    <TextField
+                      size="small"
+                      name="masa_lineal"
+                      label="Masa Lineal (Kg/m)"
+                      type="number"
+                      onChange={(e) => {
+                        const masaValor = parseFloat(e.target.value) || 0;
+                        setValue('masa_lineal', masaValor);
+                        if (watchLongitud > 0) {
+                          const nuevoUnitario =
+                            masaValor / (watchLongitud / 1000);
+                          setValue(
+                            'peso_unitario',
+                            parseFloat(nuevoUnitario.toFixed(3)),
+                          );
+                        }
+                      }}
+                      helperText="Modifica este valor para recalcular peso unitario"
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 6 }}>
+                    <TextField
+                      size="small"
+                      name="peso_unitario"
+                      label="Peso Unitario (Kg)"
+                      type="number"
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 6 }}>
+                    <TextField
+                      size="small"
+                      name="peso_total"
+                      label="Peso Total (Kg)"
+                      type="number"
+                      InputProps={{
+                        readOnly: true,
+                      }}
+                    />
+                  </Grid>
+                </Grid>
               </Stack>
             </Paper>
           </Grid>
@@ -586,8 +625,11 @@ const TuboForm = ({ data = null, handleConfirm, handleCancel }) => {
                   <TextField
                     size="small"
                     name="unidades"
-                    label="Total Unidades"
+                    label="Cantidad de Tubos"
                     type="number"
+                    InputProps={{
+                      readOnly: true,
+                    }}
                   />
                 </Grid>
                 <Grid size={{ xs: 6 }}>
