@@ -50,7 +50,7 @@ const tubosController = {
       const { data, total } = await listarTodosTubosService(payload);
       return { success: true, data: data, total: total };
     } catch (error) {
-      console.error('Error en tubosController.getAll:', error);
+      console.error('Error en tubosController.getAllForSelects:', error);
       return { success: false, error: error.message };
     }
   },

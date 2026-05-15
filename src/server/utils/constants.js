@@ -50,7 +50,8 @@ export const dataQueries = [
     query: `
       SELECT 
         id AS [ID],
-        horario AS [Horario],
+        entrada AS [Entrada],
+        salida AS [Salida],
         created_at AS [Fecha de creación],
         updated_at AS [Fecha de actualización]
       FROM Turnos
@@ -137,7 +138,8 @@ export const columnMapping = {
   },
   Turnos: {
     ID: 'id',
-    Horario: 'horario',
+    Entrada: 'entrada',
+    Salida: 'salida',
     'Fecha de creación': 'created_at',
     'Fecha de actualización': 'updated_at',
   },
@@ -200,7 +202,8 @@ export const unicodeColumns = [
   'lote',
   'numero_paquetes',
   'titulo',
-  'horario',
+  'entrada',
+  'salida',
 ];
 
 export const ROWS_PER_PAGE_TEMPLATE = 22;

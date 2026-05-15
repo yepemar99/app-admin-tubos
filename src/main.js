@@ -14,6 +14,7 @@ const { default: flejesRoutes } = require('./server/routes/flejes.route');
 const { default: bobinasRoutes } = require('./server/routes/bobinas.route');
 const { default: tubosRoutes } = require('./server/routes/tubos.route');
 const { default: maquinasRoutes } = require('./server/routes/maquinas.route');
+const { default: prodTubosRoutes } = require('./server/routes/prodTubos.route');
 const {
   default: salidasPaqsRoutes,
 } = require('./server/routes/salidasPaqs.route');
@@ -64,6 +65,7 @@ app.on('ready', async () => {
   dbRoutes();
   actionsRoute();
   tubosRoutes();
+  turnosRoutes();
   salidasPaqsRoutes();
   operariosRoutes();
   maquinasRoutes();
@@ -72,6 +74,7 @@ app.on('ready', async () => {
   fabricantesRoutes();
   flejesRoutes();
   planesRoutes();
+  prodTubosRoutes();
   statsRoutes();
 });
 

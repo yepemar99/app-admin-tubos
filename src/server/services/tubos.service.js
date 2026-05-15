@@ -58,7 +58,10 @@ function resolveOutputFilePath(destinationPath = '') {
   return pathModule.join(resolvedDestination, `informe-tubos-${stamp}.pdf`);
 }
 
-export async function listarTodosTubosService({ calidad_id = null }) {
+export async function listarTodosTubosService({
+  calidad_id = null,
+  maquina_id = null,
+} = {}) {
   try {
     const conn = database.getConnection();
 
@@ -67,10 +70,18 @@ export async function listarTodosTubosService({ calidad_id = null }) {
     if (calidad_id && calidad_id !== 0) {
       whereClauses.push(`calidad_id = ${calidad_id}`);
     }
+    if (maquina_id && maquina_id !== 0) {
+      whereClauses.push(
+        `EXISTS (SELECT 1 FROM Tubos_Maquinas tm WHERE tm.tubo_id = t.id AND tm.maquina_id = ${maquina_id} )`,
+      );
+    }
     const whereSQL = whereClauses.join(' AND ');
     const countQuery = `
       SELECT COUNT(*) AS total
-      FROM Tubos
+      FROM Tubos AS t
+      LEFT JOIN Tipos_Calidad AS tc ON t.calidad_id = tc.id
+      LEFT JOIN Tipos_Tubos AS tt ON t.tipo_id = tt.id
+      LEFT JOIN Tubos_Maquinas AS tm ON t.id = tm.tubo_id
       WHERE ${whereSQL}
     `;
     const countResult = await conn.query(countQuery);
@@ -91,11 +102,17 @@ export async function listarTodosTubosService({ calidad_id = null }) {
     });
 
     const selectQuery = `
-      SELECT 
-          t.id, 
-          t.art_concepto, 
-          t.medida,
-          t.calidad_id
+      SELECT DISTINCT
+            t.id, 
+        t.art_concepto, 
+        t.medida,
+        t.calidad_id,
+        tc.nombre,    
+        t.espesor,    
+        tt.nombre,    
+        t.ancho,      
+        t.alto,       
+        t.diametro    
       FROM Tubos AS t
       LEFT JOIN Tipos_Calidad AS tc ON t.calidad_id = tc.id
       LEFT JOIN Tipos_Tubos AS tt ON t.tipo_id = tt.id

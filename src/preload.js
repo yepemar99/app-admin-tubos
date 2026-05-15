@@ -48,6 +48,12 @@ contextBridge.exposeInMainWorld('api', {
     update: (payload) => ipcRenderer.invoke('tubos:update', payload),
     delete: (payload) => ipcRenderer.invoke('tubos:delete', payload),
   },
+  prodTubos: {
+    getAll: (payload) => ipcRenderer.invoke('prodTubos:getAll', payload),
+    create: (payload) => ipcRenderer.invoke('prodTubos:create', payload),
+    update: (payload) => ipcRenderer.invoke('prodTubos:update', payload),
+    delete: (payload) => ipcRenderer.invoke('prodTubos:delete', payload),
+  },
   tiposCalidad: {
     getAll: () => ipcRenderer.invoke('tiposCalidad:getAll'),
   },
@@ -63,6 +69,9 @@ contextBridge.exposeInMainWorld('api', {
   },
   operarios: {
     getAll: () => ipcRenderer.invoke('operarios:getAll'),
+  },
+  turnos: {
+    getAll: (payload) => ipcRenderer.invoke('turnos:getAll', payload),
   },
   stats: {
     getTubosStats: (payload) =>

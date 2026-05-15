@@ -14,6 +14,12 @@ export const sitemap = [
     icon: 'cutting_plan',
   },
   {
+    id: 'prod_tubos',
+    subheader: 'Producción de Tubos',
+    path: paths.prodTubos,
+    icon: 'prod_tubos',
+  },
+  {
     id: 'sales_packages',
     subheader: 'Salidas de paquetes',
     path: paths.salesPackages,

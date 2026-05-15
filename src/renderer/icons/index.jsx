@@ -20,6 +20,7 @@ import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 import TollRoundedIcon from '@mui/icons-material/TollRounded';
 import ContentCutRoundedIcon from '@mui/icons-material/ContentCutRounded';
 import ViewColumnIcon from '@mui/icons-material/ViewColumn';
+import FactoryIcon from '@mui/icons-material/Factory';
 export const muiIcons = {
   home: HomeIcon,
   dashboard: DashboardIcon,
@@ -41,4 +42,5 @@ export const muiIcons = {
   tubos: CalendarViewMonthIcon,
   sales_packages: LocalShippingIcon,
   cutting_plan: ContentCutRoundedIcon,
+  prod_tubos: FactoryIcon,
 };

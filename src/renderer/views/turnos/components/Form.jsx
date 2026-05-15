@@ -1,13 +1,14 @@
-import { Box, Button, Grid } from "@mui/material";
-import React from "react";
-import { z } from "zod";
-import { useForm, FormProvider } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import TextField from "../../../components/common/Textfield";
-import { flexEnd } from "../../../utils/styles";
+import { Box, Button, Grid } from '@mui/material';
+import React from 'react';
+import { z } from 'zod';
+import { useForm, FormProvider } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import TextField from '../../../components/common/Textfield';
+import { flexEnd } from '../../../utils/styles';
 
 const schema = z.object({
-  horario: z.string().nonempty("El horario es obligatorio"),
+  entrada: z.string().nonempty('La entrada es obligatoria'),
+  salida: z.string().nonempty('La salida es obligatoria'),
 });
 
 const TurnoForm = ({
@@ -18,16 +19,11 @@ const TurnoForm = ({
   const methods = useForm({
     resolver: zodResolver(schema),
     defaultValues: {
-      horario: data?.horario ? `${data?.horario}` : "",
+      entrada: data?.entrada ? `${data?.entrada}` : '',
+      salida: data?.salida ? `${data?.salida}` : '',
     },
   });
-  const {
-    handleSubmit,
-    control,
-    watch,
-    formState: { errors },
-    setValue,
-  } = methods;
+  const { handleSubmit } = methods;
 
   const onSubmit = (data) => {
     handleConfirm(data);
@@ -36,15 +32,18 @@ const TurnoForm = ({
   return (
     <FormProvider {...methods}>
       <Box component="form" onSubmit={handleSubmit(onSubmit)}>
-        <Box sx={{ width: "100%" }}>
+        <Box sx={{ width: '100%' }}>
           <Grid container spacing={2}>
             <Grid size={{ xs: 12 }}>
               <TextField
                 fullWidth
-                name="horario"
-                label="Horario"
+                name="entrada"
+                label="Entrada"
                 size="small"
               />
+            </Grid>
+            <Grid size={{ xs: 12 }}>
+              <TextField fullWidth name="salida" label="Salida" size="small" />
             </Grid>
           </Grid>
         </Box>

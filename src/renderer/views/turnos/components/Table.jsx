@@ -1,10 +1,10 @@
-import { Stack, Typography } from "@mui/material";
-import React from "react";
-import ActionMenu from "../../../components/common/ActionMenu";
-import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
-import { DataGrid } from "@mui/x-data-grid";
-import { PAGE_SIZE, ROW_HEIGHT } from "../../../../utils/constants";
-import DataGridFooter from "../../../components/common/DataGridFooter";
+import { Stack, Typography } from '@mui/material';
+import React from 'react';
+import ActionMenu from '../../../components/common/ActionMenu';
+import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
+import { DataGrid } from '@mui/x-data-grid';
+import { PAGE_SIZE, ROW_HEIGHT } from '../../../../utils/constants';
+import DataGridFooter from '../../../components/common/DataGridFooter';
 
 const TurnosTable = ({
   loading = false,
@@ -18,7 +18,7 @@ const TurnosTable = ({
 }) => {
   return (
     <DataGrid
-      sx={{ maxHeight: "calc(100vh - 200px)", width: "100%" }}
+      sx={{ maxHeight: 'calc(100vh - 200px)', width: '100%' }}
       //   apiRef={apiRef}
       density="standard"
       loading={loading}
@@ -57,10 +57,10 @@ export default TurnosTable;
 
 const getColumns = (handleDetail, handleEdit, handleDelete) => [
   {
-    field: "id",
-    headerName: "Id",
+    field: 'id',
+    headerName: 'Id',
     editable: false,
-    align: "left",
+    align: 'left',
     maxWidth: 50,
     flex: 1,
     renderCell: (params) => (
@@ -71,16 +71,16 @@ const getColumns = (handleDetail, handleEdit, handleDelete) => [
         justifyContent="center"
       >
         <Typography variant="body2" fontWeight={500}>
-          {params?.row?.id || "-"}
+          {params?.row?.id || '-'}
         </Typography>
       </Stack>
     ),
   },
   {
-    field: "horario",
-    headerName: "Horario",
+    field: 'entrada',
+    headerName: 'Entrada',
     editable: false,
-    align: "left",
+    align: 'left',
     flex: 1,
     renderCell: (params) => (
       <Stack
@@ -90,22 +90,42 @@ const getColumns = (handleDetail, handleEdit, handleDelete) => [
         justifyContent="center"
       >
         <Typography variant="body2" fontWeight={500}>
-          {params?.row?.horario || "-"}
+          {params?.row?.entrada || '-'}
+        </Typography>
+      </Stack>
+    ),
+  },
+  {
+    field: 'salida',
+    headerName: 'Salida',
+    editable: false,
+    align: 'left',
+    flex: 1,
+    renderCell: (params) => (
+      <Stack
+        height={1}
+        direction="column"
+        alignSelf="center"
+        justifyContent="center"
+      >
+        <Typography variant="body2" fontWeight={500}>
+          {params?.row?.salida || '-'}
         </Typography>
       </Stack>
     ),
   },
 
   {
-    field: "fecha",
-    headerName: "Fecha",
+    field: 'fecha',
+    headerName: 'Fecha',
     editable: false,
-    align: "left",
+    align: 'left',
     flex: 1,
     renderCell: (params) => {
-      const formatFechaHora = params?.row?.created_at
-        ? params?.row?.created_at.split(".")[0]
-        : "-";
+      const formatFechaHora =
+        params?.row?.creado || params?.row?.created_at
+          ? (params?.row?.creado || params?.row?.created_at).split('.')[0]
+          : '-';
       return (
         <Stack
           height={1}
@@ -121,10 +141,10 @@ const getColumns = (handleDetail, handleEdit, handleDelete) => [
     },
   },
   {
-    field: "actions",
-    headerName: "Actions",
+    field: 'actions',
+    headerName: 'Actions',
     editable: false,
-    align: "center",
+    align: 'center',
     flex: 1,
     maxWidth: 70,
     renderCell: (params) => (

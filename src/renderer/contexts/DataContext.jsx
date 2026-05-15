@@ -9,6 +9,18 @@ export function DataProvider({ children }) {
   const [tiposTubos, setTiposTubos] = useState([]);
   const [maquinas, setMaquinas] = useState([]);
   const [operarios, setOperarios] = useState([]);
+  const [turnos, setTurnos] = useState([]);
+
+  const loadTurnos = async () => {
+    const result = await window.api.turnos.getAll();
+    return {
+      ...result,
+      data: result.data.map((row) => ({
+        ...row,
+      })),
+      total: result.data.length,
+    };
+  };
 
   const loadOperarios = async () => {
     const result = await window.api.operarios.getAll();
@@ -83,6 +95,9 @@ export function DataProvider({ children }) {
       setMaquinas(resultMaquinas.data);
       const resultOperarios = await loadOperarios();
       setOperarios(resultOperarios.data);
+      const resultTurnos = await loadTurnos();
+      console.log('Turnos cargados:', resultTurnos.data);
+      setTurnos(resultTurnos.data);
     } catch (err) {
       console.log(`Error: ${err?.message ? err?.message : err}`);
     } finally {
@@ -109,6 +124,8 @@ export function DataProvider({ children }) {
         setMaquinas,
         operarios,
         setOperarios,
+        turnos,
+        setTurnos,
       }}
     >
       {children}

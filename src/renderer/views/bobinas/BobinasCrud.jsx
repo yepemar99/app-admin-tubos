@@ -38,6 +38,7 @@ const BobinasCrud = () => {
     const calidadFilter = filters.find((f) => f.name === 'calidad');
     const { orderBy, orderDir } = resolveSortParams(sortModel, sortFieldMap);
     const hasFilters = searchTerm || filters.some((f) => f.value);
+
     return await window.api.bobinas.getAll({
       page,
       pageSize,
@@ -49,6 +50,7 @@ const BobinasCrud = () => {
   };
 
   const onCreate = async (data) => {
+    console.log('Create:', data);
     return await window.api.bobinas.create({
       ...data,
       art_concepto: data.concepto,

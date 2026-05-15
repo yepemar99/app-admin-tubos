@@ -98,8 +98,6 @@ const ProdTubosChart = () => {
     loadStats();
   }, []);
 
-  console.log('Stats de tubos:', stats);
-
   return (
     <Stack flexDirection={'column'} gap={1}>
       <Stack justifyContent={'center'} sx={{ mb: 1 }}>
