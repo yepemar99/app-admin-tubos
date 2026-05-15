@@ -47,7 +47,6 @@ const SalidasPaqsTable = ({
       onPaginationModelChange={(model) => {
         handleChangePage(model.page + 1);
       }}
-      checkboxSelection
       pageSizeOptions={[]}
     />
   );

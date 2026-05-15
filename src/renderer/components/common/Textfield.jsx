@@ -1,14 +1,14 @@
-import React from "react";
-import { useFormContext, Controller } from "react-hook-form";
-import { TextField as TextFieldMUI } from "@mui/material";
+import React from 'react';
+import { useFormContext, Controller } from 'react-hook-form';
+import { TextField as TextFieldMUI } from '@mui/material';
 
 const TextField = ({
   fullWidth = true,
   name,
   label,
-  size = "medium",
+  size = 'medium',
   disabled = false,
-  type = "text",
+  type = 'text',
   multiline = false,
   rows = 3,
   onChange = null,
@@ -32,19 +32,19 @@ const TextField = ({
           InputProps={{
             style: {
               height:
-                size === "small" ? (multiline ? rows * 24 : 40) : undefined,
+                size === 'small' ? (multiline ? rows * 24 : 40) : undefined,
             },
           }}
           disabled={disabled}
           multiline={multiline}
           rows={multiline ? rows : undefined}
           error={!!errors[name]}
-          helperText={errors[name]?.message || ""}
+          helperText={errors[name]?.message || ''}
           onChange={(e) => {
             let nextValue;
-            if (type === "number") {
+            if (type === 'number') {
               const value = e.target.value;
-              nextValue = value === "" ? 0 : Number(value);
+              nextValue = value === '' ? 0 : Number(value);
               field.onChange(nextValue);
             } else {
               nextValue = e.target.value;
@@ -55,7 +55,11 @@ const TextField = ({
               onChange(nextValue);
             }
           }}
-          value={field.value || ""}
+          value={
+            type === 'number'
+              ? field.value
+              : (field.value && field.value.toString()) || ''
+          }
         />
       )}
     />

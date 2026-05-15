@@ -13,6 +13,7 @@ import { initFilters } from './utils';
 import InformePaqs from '../tubos/components/Informe';
 import { toast } from 'react-toastify';
 import Modal from '../../components/common/Modal';
+import { formatDateForInput } from '../../../utils/functions';
 
 const SalidaPaqs = () => {
   const loadSalidasPaqs = async (
@@ -36,11 +37,23 @@ const SalidaPaqs = () => {
   };
 
   const onCreateConfirm = async (data) => {
-    return await window.api.salidasPaqs.create(data);
+    const dateData = formatDateForInput(data);
+
+    return await window.api.salidasPaqs.create({
+      ...data,
+      fecha: dateData?.createdAt,
+    });
   };
 
   const onEditConfirm = async (data) => {
-    return await window.api.salidasPaqs.update({ id: data.id, data: data });
+    const dateData = formatDateForInput(data);
+    return await window.api.salidasPaqs.update({
+      id: data.id,
+      data: {
+        ...data,
+        fecha: dateData?.createdAt,
+      },
+    });
   };
 
   const onDeleteConfirm = async (id) => {

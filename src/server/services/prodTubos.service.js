@@ -1,47 +1,170 @@
 ﻿import database from '../../db/database';
 import { orderQuery } from '../../utils/functions';
+import {
+  formatFechaSQL,
+  normalizeDate,
+  normalizeNumber,
+  normalizeString,
+} from '../utils/functions';
 
-function normalizeNumber(value, fallback = null) {
-  const numericValue = Number(value);
-  return Number.isFinite(numericValue) ? numericValue : fallback;
-}
-
-const formatFechaSQL = (fecha) => {
-  if (!fecha) return null;
-
-  // Si ya es un objeto Date, úsalo directamente, si no, créalo
-  const date = fecha instanceof Date ? fecha : new Date(fecha);
-
-  // Validar si la fecha es válida
-  if (Number.isNaN(date.getTime())) return null;
-
-  const pad = (value) => String(value).padStart(2, '0');
-
-  const year = date.getFullYear();
-  const month = pad(date.getMonth() + 1);
-  const day = pad(date.getDate());
-  const hours = pad(date.getHours());
-  const minutes = pad(date.getMinutes());
-  const seconds = pad(date.getSeconds());
-
-  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+const obtenerProdTuboPorId = async (id) => {
+  const conn = database.getConnection();
+  const query = `
+    SELECT
+      pt.id,
+      pt.cant_tubos_buenos,
+      pt.cant_tubos_malos,
+      pt.tubo_id,
+      t.fleje_id,
+      t.peso_unitario,
+      f.peso_total
+    FROM dbo.Prod_Tubos pt
+    LEFT JOIN dbo.Tubos t ON pt.tubo_id = t.id
+    LEFT JOIN dbo.Flejes f ON t.fleje_id = f.id
+    WHERE pt.id = ?
+  `;
+  const result = await conn.query(query, [id]);
+  return result.length > 0 ? result[0] : null;
 };
 
-function normalizeDate(value) {
-  if (!value) return null;
+const recalcularInventarioTubo = async (
+  prod_tubo,
+  tubo_id,
+  cant_tubos_buenos = 0,
+) => {
+  const conn = database.getConnection();
+  if (prod_tubo) {
+    const queryRestarInventarioViejo = `
+      UPDATE dbo.Tubos
+      SET unidades = CASE
+            WHEN unidades - ? < 0 THEN 0
+            ELSE unidades - ?
+          END,
+          num_paquetes = CASE
+            WHEN (unidades - ?) < 0 THEN 0
+            ELSE ISNULL((unidades - ?) / NULLIF(num_por_paq, 0), 0)
+          END,
+          peso_total = CASE
+            WHEN peso_total - (unidades - ?)*peso_unitario < 0 THEN 0
+            ELSE peso_total - (unidades - ?)*peso_unitario
+          END
+      WHERE id = ?
+    `;
 
-  const dateValue = value instanceof Date ? value : new Date(value);
-  if (Number.isNaN(dateValue.getTime())) return null;
-
-  return dateValue;
-}
-
-const normalizeString = (value, fallback = null) => {
-  if (typeof value === 'string') {
-    const trimmedValue = value.trim();
-    return trimmedValue.length > 0 ? trimmedValue : fallback;
+    const result = await conn.query(queryRestarInventarioViejo, [
+      prod_tubo.cant_tubos_buenos,
+      prod_tubo.cant_tubos_buenos,
+      prod_tubo.cant_tubos_buenos,
+      prod_tubo.cant_tubos_buenos,
+      prod_tubo.cant_tubos_buenos,
+      prod_tubo.cant_tubos_buenos,
+      prod_tubo.tubo_id,
+    ]);
   }
-  return fallback;
+  if (tubo_id) {
+    const querySumarInventarioNuevo = `
+      UPDATE dbo.Tubos
+      SET unidades = CASE
+            WHEN unidades + ? < 0 THEN 0
+            ELSE unidades + ?
+          END,
+          num_paquetes = CASE
+            WHEN (unidades + ?) < 0 THEN 0
+            ELSE ISNULL((unidades + ?) / NULLIF(num_por_paq, 0), 0)
+          END,
+          peso_total = CASE
+            WHEN peso_total + (unidades + ?)*peso_unitario < 0 THEN 0
+            ELSE peso_total + (unidades + ?)*peso_unitario
+          END
+      WHERE id = ?
+    `;
+
+    const result = await conn.query(querySumarInventarioNuevo, [
+      cant_tubos_buenos,
+      cant_tubos_buenos,
+      cant_tubos_buenos,
+      cant_tubos_buenos,
+      cant_tubos_buenos,
+      cant_tubos_buenos,
+      tubo_id,
+    ]);
+  }
+};
+
+const recalcularInvetarioFleje = async (prod_tubo, tubo_id, cant_tubos = 0) => {
+  const conn = database.getConnection();
+  if (prod_tubo) {
+    const querySumarInventarioViejo = `
+      UPDATE dbo.Flejes
+      SET peso_total = CASE
+            WHEN peso_total + ? < 0 THEN 0
+            ELSE peso_total + ?
+          END,
+          unidades = CASE
+            WHEN unidades + ISNULL(CAST(ROUND((peso_total + ?)/NULLIF(peso_medio, 0), 0) AS INT), 0) < 0 THEN 0
+            ELSE unidades + ISNULL(CAST(ROUND((peso_total + ?)/NULLIF(peso_medio, 0), 0) AS INT), 0)
+          END
+      WHERE id = ?
+    `;
+    console.log('querySumarInventarioViejo', querySumarInventarioViejo);
+
+    const prod_tubo_cant_tubos =
+      Number(prod_tubo.cant_tubos_buenos) + Number(prod_tubo.cant_tubos_malos);
+    const prod_tubo_peso_total =
+      (prod_tubo_cant_tubos * prod_tubo.peso_unitario) / 1000.0;
+    console.log('values', [
+      prod_tubo_peso_total,
+      prod_tubo_peso_total,
+      prod_tubo_peso_total,
+      prod_tubo_peso_total,
+      prod_tubo.fleje_id,
+    ]);
+    const result = await conn.query(querySumarInventarioViejo, [
+      prod_tubo_peso_total,
+      prod_tubo_peso_total,
+      prod_tubo_peso_total,
+      prod_tubo_peso_total,
+      prod_tubo.fleje_id,
+    ]);
+  }
+  if (tubo_id) {
+    const querySelectTubo = `
+      SELECT fleje_id, peso_unitario
+      FROM dbo.Tubos
+      WHERE id = ?
+    `;
+    const resultTubo = await conn.query(querySelectTubo, [tubo_id]);
+    const tubo = resultTubo.length > 0 ? resultTubo[0] : null;
+    const tubo_peso_total = (cant_tubos * tubo.peso_unitario) / 1000.0;
+
+    const queryRestarInventarioNuevo = `
+      UPDATE dbo.Flejes
+      SET peso_total = CASE
+            WHEN peso_total - ? < 0 THEN 0
+            ELSE peso_total - ?
+          END,
+          unidades = CASE
+            WHEN unidades - ISNULL(CAST(ROUND((peso_total - ?) / NULLIF(peso_medio, 0), 0) AS INT), 0) < 0 THEN 0
+            ELSE unidades - ISNULL(CAST(ROUND((peso_total - ?) / NULLIF(peso_medio, 0), 0) AS INT), 0)
+          END
+      WHERE id = ?
+    `;
+    console.log('queryRestarInventarioNuevo', queryRestarInventarioNuevo);
+    console.log('values', [
+      tubo_peso_total,
+      tubo_peso_total,
+      tubo_peso_total,
+      tubo_peso_total,
+      tubo.fleje_id,
+    ]);
+    const result = await conn.query(queryRestarInventarioNuevo, [
+      tubo_peso_total,
+      tubo_peso_total,
+      tubo_peso_total,
+      tubo_peso_total,
+      tubo.fleje_id,
+    ]);
+  }
 };
 
 export async function listarProdTubosService({
@@ -184,6 +307,7 @@ export async function listarProdTubosService({
         t.salida AS turno_salida,
         t2.art_concepto AS tubo_concepto,
         t2.num_por_paq AS tubo_num_por_paq,
+        t2.calidad_id AS tubo_calidad_id,
         pt.concentracion_taladrina,
         pt.lote,
         pt.creado,
@@ -211,6 +335,7 @@ export async function listarProdTubosService({
           operario_id: Number(row.operario_id),
           turno_id: Number(row.turno_id),
           tubo_id: Number(row.tubo_id),
+          calidad_id: Number(row.tubo_calidad_id) || null,
           cant_tubos_buenos: Number(row.cant_tubos_buenos) || 0,
           cant_tubos_malos: Number(row.cant_tubos_malos) || 0,
           paqs_buenos: Number(paquetes.toFixed(2)),
@@ -264,6 +389,13 @@ export async function crearProdTuboService({
         "El campo 'cant_tubos_malos' es obligatorio y debe ser un número válido.",
       );
     }
+
+    await recalcularInventarioTubo(null, tubo_id, safeTubosBuenos);
+    await recalcularInvetarioFleje(
+      null,
+      tubo_id,
+      safeTubosBuenos + safeTubosMalos,
+    );
 
     const safeCreado = formatFechaSQL(creado) || '';
 
@@ -384,6 +516,19 @@ export async function actualizarProdTuboService({
 
     values.push(safeId);
 
+    await obtenerProdTuboPorId(safeId).then(async (prod_tubo) => {
+      await recalcularInventarioTubo(
+        prod_tubo,
+        safeTubosBuenos,
+        safeTubosMalos,
+      );
+      await recalcularInvetarioFleje(
+        prod_tubo,
+        safeTuboId,
+        safeTubosBuenos + safeTubosMalos,
+      );
+    });
+
     const updateQuery = `
       UPDATE dbo.Prod_Tubos
       SET ${fields.join(', ')}
@@ -414,6 +559,11 @@ export async function eliminarProdTuboService(id) {
   try {
     const conn = database.getConnection();
     const safeId = normalizeNumber(id, null);
+
+    await obtenerProdTuboPorId(safeId).then(async (prod_tubo) => {
+      await recalcularInventarioTubo(prod_tubo, null, 0);
+      await recalcularInvetarioFleje(prod_tubo, null, 0);
+    });
 
     if (safeId === null || safeId <= 0) {
       throw new Error(

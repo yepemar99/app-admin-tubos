@@ -71,6 +71,22 @@ const SalidaTuboForm = ({ data, handleConfirm, handleCancel }) => {
     }
   };
 
+  const getInitialFecha = () => {
+    if (!data?.creado) return null;
+
+    return new Date(data.creado).toISOString().split('T')[0];
+  };
+
+  const buildSubmitPayload = (formData) => {
+    const initialFecha = getInitialFecha();
+    const fecha = initialFecha === formData.fecha ? null : formData.fecha;
+
+    return {
+      ...formData,
+      creado: fecha,
+    };
+  };
+
   const handleFormSubmit = async (formData) => {
     try {
       if (
@@ -99,7 +115,7 @@ const SalidaTuboForm = ({ data, handleConfirm, handleCancel }) => {
         }
       }
 
-      await handleConfirm(formData);
+      await handleConfirm(buildSubmitPayload(formData));
     } catch (error) {
       toast.error(error?.message || 'Error al enviar el formulario');
     }
@@ -334,7 +350,7 @@ const SalidaTuboForm = ({ data, handleConfirm, handleCancel }) => {
         handleCancel={() => setShowModalError(false)}
         handleCustom={() => {
           setShowModalError(false);
-          handleConfirm(pendingFormData);
+          handleConfirm(buildSubmitPayload(pendingFormData));
           setPendingFormData(null);
         }}
       >

@@ -255,7 +255,7 @@ const FlejeForm = ({ data = null, handleConfirm, handleCancel }) => {
               <Stack spacing={1}>
                 <TextField
                   name="peso_total"
-                  label="Peso Total (kg)"
+                  label="Peso Total (Tn)"
                   type="number"
                   fullWidth
                   size="small"
@@ -263,7 +263,7 @@ const FlejeForm = ({ data = null, handleConfirm, handleCancel }) => {
                 <Divider />
                 <TextField
                   name="peso_medio"
-                  label="Peso Medio Unitario (kg)"
+                  label="Peso Medio Unitario (Tn)"
                   type="number"
                   fullWidth
                   size="small"

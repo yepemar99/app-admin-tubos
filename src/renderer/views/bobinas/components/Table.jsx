@@ -164,7 +164,7 @@ const getColumns = (
         justifyContent="center"
       >
         <Typography variant="body2" fontWeight={500}>
-          {params?.row?.peso_medio || '-'}
+          {params?.row?.peso_medio || '0'}
         </Typography>
       </Stack>
     ),
@@ -182,7 +182,7 @@ const getColumns = (
         justifyContent="center"
       >
         <Typography variant="body2" fontWeight={500}>
-          {params?.row?.unidades || '-'}
+          {params?.row?.unidades || '0'}
         </Typography>
       </Stack>
     ),

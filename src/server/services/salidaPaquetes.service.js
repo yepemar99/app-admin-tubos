@@ -4,6 +4,11 @@ import fs from 'fs';
 import pathModule from 'path';
 import { ROWS_PER_PAGE_TEMPLATE } from '../utils/constants';
 import { orderQuery } from '../../utils/functions';
+import {
+  formatFechaSQL,
+  normalizeNumber,
+  normalizeString,
+} from '../utils/functions';
 
 function escapeHtml(value = '') {
   return String(value)
@@ -92,10 +97,25 @@ async function recalcularInventarioTubos({ salida_paq_id, tubo_id, num_paqs }) {
   if (tubo_id && Number(num_paqs) >= 0) {
     const paquetesRestar = Number(num_paqs || 0);
     const queryUpdateInventarioNuevo = `UPDATE Tubos 
-     SET num_paquetes = num_paquetes - ?, unidades = (num_paquetes - ?)*num_por_paq, peso_total = peso_unitario * (num_paquetes - ?)*num_por_paq
+     SET num_paquetes = CASE
+           WHEN num_paquetes - ? < 0 THEN 0
+           ELSE num_paquetes - ?
+         END,
+         unidades = CASE
+           WHEN num_paquetes - ? < 0 THEN 0
+           ELSE (num_paquetes - ?)*num_por_paq
+         END,
+         peso_total = CASE
+           WHEN num_paquetes - ? < 0 THEN 0
+           ELSE peso_unitario * (num_paquetes - ?)*num_por_paq
+         END
      WHERE id = ?
     `;
+
     await conn.query(queryUpdateInventarioNuevo, [
+      paquetesRestar,
+      paquetesRestar,
+      paquetesRestar,
       paquetesRestar,
       paquetesRestar,
       paquetesRestar,
@@ -185,7 +205,7 @@ export const listarSalidaPaquetes = async ({
     const total = countResult[0]?.total ? Number(countResult[0].total) : 0;
 
     const selectQuery = `
-      SELECT s.id, s.operario_id, s.tubo_id, s.num_paqs, s.creado,
+      SELECT s.id, s.operario_id, s.tubo_id, s.num_paqs, s.creado, s.observacion,
              o.nombre AS operario_nombre,
              o.apellido1 AS operario_apellido1,
               o.apellido2 AS operario_apellido2,
@@ -213,178 +233,13 @@ export const listarSalidaPaquetes = async ({
           num_paqs: Number(row.num_paqs),
           creado: row.creado,
           tubo_concepto: row.tubo_concepto || 'N/A',
+          observacion: row.observacion || '',
         };
       }),
       total,
     };
   } catch (error) {
     console.error('Error listando salida de paquetes:', error.message);
-    throw error;
-  }
-};
-
-export const informeSalidasPaquetes = async ({
-  fechaInicial = '',
-  fechaFinal = '',
-  tubo_ids = [],
-} = {}) => {
-  try {
-    const conn = database.getConnection();
-
-    // Normalizar fechas
-    let startDate = String(fechaInicial || '').trim();
-    let endDate = String(fechaFinal || '').trim();
-
-    // Si no hay fecha inicial, tomar la fecha mínima de la tabla
-    if (!startDate) {
-      const minDateQuery = `SELECT MIN(CAST(creado AS date)) AS fecha_minima FROM Salidas_Paqs_Tubos`;
-      const minDateResult = await conn.query(minDateQuery);
-      startDate = minDateResult[0]?.fecha_minima
-        ? new Date(minDateResult[0].fecha_minima).toISOString().slice(0, 10)
-        : new Date().toISOString().slice(0, 10);
-    }
-
-    // Si no hay fecha final, usar la fecha actual
-    if (!endDate) {
-      endDate = new Date().toISOString().slice(0, 10);
-    }
-
-    const whereClauses = ['1=1'];
-    const params = [];
-
-    whereClauses.push('CAST(s.creado AS date) BETWEEN ? AND ?');
-    params.push(startDate, endDate);
-
-    if (Array.isArray(tubo_ids) && tubo_ids.length > 0) {
-      const ids = tubo_ids
-        .map((id) => Number(id))
-        .filter((id) => Number.isFinite(id));
-      if (ids.length > 0) {
-        whereClauses.push(`s.tubo_id IN (${ids.map(() => '?').join(',')})`);
-        params.push(...ids);
-      }
-    }
-
-    const whereSQL = whereClauses.join(' AND ');
-
-    let orderBySQL = orderQuery({
-      secondaryOrderCols: [
-        'tc.nombre',
-        't.espesor',
-        'tt.nombre',
-        't.ancho',
-        't.alto',
-        't.diametro',
-        't.medida',
-      ],
-      safeOrderBy: 'tc.nombre',
-      safeOrderDir: 'ASC',
-    });
-
-    // Agrupar por tubo_id (obteniendo también la calidad) y luego reagrupar por calidad
-    const query = `
-      SELECT
-        s.tubo_id,
-        t.medida AS medida,
-        t.peso_unitario AS peso_medio,
-        t.calidad_id AS calidad_id,
-        tc.nombre AS calidad_nombre,
-        SUM(s.num_paqs) AS paquetes_sum
-      FROM Salidas_Paqs_Tubos s
-      LEFT JOIN Tubos t ON s.tubo_id = t.id
-      LEFT JOIN Tipos_Calidad tc ON t.calidad_id = tc.id
-      LEFT JOIN Tipos_Tubos tt ON t.tipo_id = tt.id
-      WHERE ${whereSQL}
-      GROUP BY s.tubo_id, t.medida, t.peso_unitario, t.calidad_id, tc.nombre, tt.nombre, t.espesor, t.ancho, t.alto, t.diametro
-      ORDER BY ${orderBySQL}
-    `;
-
-    const rows = await conn.query(query, params);
-
-    // Construir filas de reporte por tubo incluyendo la calidad
-    const reportRows = rows.map((row) => {
-      const paquetes = Number(row.paquetes_sum || 0);
-      const peso = paquetes * Number(row.peso_medio || 0);
-      return {
-        calidad_id: row.calidad_id != null ? Number(row.calidad_id) : null,
-        calidad: row.calidad_nombre || 'N/A',
-        tubo_id: Number(row.tubo_id),
-        medida: row.medida || 'N/A',
-        paquetes,
-        peso,
-      };
-    });
-
-    // Totales globales
-    const totalPaquetes = reportRows.reduce((acc, r) => acc + r.paquetes, 0);
-    const totalPeso = reportRows.reduce((acc, r) => acc + r.peso, 0);
-
-    // Agrupar por calidad_id y añadir encabezado y subtotal por grupo
-    let safeRows;
-    if (reportRows.length) {
-      const groups = new Map();
-      for (const r of reportRows) {
-        const key = r.calidad_id != null ? String(r.calidad_id) : '__null__';
-        if (!groups.has(key)) {
-          groups.set(key, { calidad: r.calidad || 'N/A', rows: [] });
-        }
-        groups.get(key).rows.push(r);
-      }
-
-      safeRows = [];
-      for (const [, group] of groups) {
-        safeRows.push({
-          isQualityHeader: true,
-          calidad: group.calidad,
-        });
-
-        for (const r of group.rows) {
-          safeRows.push(r);
-        }
-
-        const subtotalPaquetes = group.rows.reduce(
-          (acc, row) => acc + Number(row.paquetes || 0),
-          0,
-        );
-        const subtotalPeso = group.rows.reduce(
-          (acc, row) => acc + Number(row.peso || 0),
-          0,
-        );
-
-        safeRows.push({
-          isSubtotal: true,
-          calidad: group.calidad,
-          tubo_id: '',
-          medida: '',
-          paquetes: subtotalPaquetes,
-          peso: subtotalPeso,
-        });
-      }
-    } else {
-      safeRows = [
-        { isQualityHeader: true, calidad: 'Sin datos' },
-        {
-          calidad: 'Sin datos',
-          tubo_id: '-',
-          medida: '-',
-          paquetes: 0,
-          peso: 0,
-        },
-      ];
-    }
-
-    return {
-      data: safeRows,
-      totalPaquetes,
-      totalPeso,
-      fechaInicial: startDate,
-      fechaFinal: endDate,
-    };
-  } catch (error) {
-    console.error(
-      'Error generando informe de salidas de paquetes:',
-      error.message || error,
-    );
     throw error;
   }
 };
@@ -581,6 +436,8 @@ export const crearSalidaPaquetes = async ({
   operario_id,
   tubo_id,
   num_paqs,
+  observacion,
+  fecha,
 }) => {
   try {
     await recalcularInventarioTubos({
@@ -588,15 +445,19 @@ export const crearSalidaPaquetes = async ({
       tubo_id,
       num_paqs,
     });
+
+    const safeCreado = formatFechaSQL(fecha) || '';
+
     const conn = database.getConnection();
     const insertQuery = `
-      INSERT INTO Salidas_Paqs_Tubos (operario_id, tubo_id, num_paqs)
-      VALUES (?, ?, ?)
+      INSERT INTO Salidas_Paqs_Tubos (operario_id, tubo_id, num_paqs, creado, observacion)
+      VALUES (?, ?, ?,  ${safeCreado ? `'${safeCreado}'` : 'GETDATE()'}, ?)
     `;
     const result = await conn.query(insertQuery, [
       operario_id,
       tubo_id,
       num_paqs,
+      observacion,
     ]);
     return { id: result.insertId };
   } catch (error) {
@@ -633,17 +494,46 @@ export const actualizarSalidaPaquetes = async ({ id, data }) => {
       num_paqs: data.num_paqs,
     });
     const conn = database.getConnection();
+
+    const fields = [];
+    const values = [];
+
+    const safeTuboId = normalizeNumber(data.tubo_id, null);
+    if (safeTuboId !== null) {
+      fields.push('tubo_id = ?');
+      values.push(safeTuboId);
+    }
+
+    const safeOperarioId = normalizeNumber(data.operario_id, null);
+    if (safeOperarioId !== null) {
+      fields.push('operario_id = ?');
+      values.push(safeOperarioId);
+    }
+
+    const safeObservacion = normalizeString(data.observacion, null);
+    if (safeObservacion !== null) {
+      fields.push('observacion = ?');
+      values.push(safeObservacion);
+    }
+
+    const safeNumPaqs = normalizeNumber(data.num_paqs, null);
+    if (safeNumPaqs !== null) {
+      fields.push('num_paqs = ?');
+      values.push(safeNumPaqs);
+    }
+
+    const safeCreado = formatFechaSQL(data.creado);
+    if (safeCreado) {
+      fields.push('creado = ?');
+      values.push(safeCreado);
+    }
+
     const updateQuery = `
       UPDATE Salidas_Paqs_Tubos
-      SET operario_id = ?, tubo_id = ?, num_paqs = ?
+      SET ${fields.join(', ')}
       WHERE id = ?
     `;
-    await conn.query(updateQuery, [
-      data.operario_id,
-      data.tubo_id,
-      data.num_paqs,
-      id,
-    ]);
+    await conn.query(updateQuery, [...values, id]);
     return { success: true };
   } catch (error) {
     console.error('Error actualizando salida de paquetes:', error.message);

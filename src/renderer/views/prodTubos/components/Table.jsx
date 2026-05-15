@@ -164,11 +164,11 @@ const getColumns = (handleDetail, handleEdit, handleDelete) => [
       >
         <Typography variant="body2" fontWeight={500}>
           <Typography variant="span" sx={{ color: 'success.main' }}>
-            {params?.row?.cant_tubos_buenos || '-'}
+            {params?.row?.cant_tubos_buenos || '0'}
           </Typography>{' '}
           /{' '}
           <Typography variant="span" sx={{ color: 'error.main' }}>
-            {params?.row?.cant_tubos_malos || '-'}
+            {params?.row?.cant_tubos_malos || '0'}
           </Typography>
         </Typography>
       </Stack>
@@ -189,7 +189,7 @@ const getColumns = (handleDetail, handleEdit, handleDelete) => [
         justifyContent="center"
       >
         <Typography variant="body2" fontWeight={500}>
-          {params?.row?.paqs_buenos || '-'}
+          {params?.row?.paqs_buenos || '0'}
         </Typography>
       </Stack>
     ),

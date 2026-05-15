@@ -454,7 +454,6 @@ export async function crearTuboService({
     if (!Number.isFinite(tuboId) || tuboId <= 0) {
       throw new Error('No se pudo obtener el ID del tubo creado.');
     }
-    console.log('Tubo creado con ID:', tuboId);
 
     if (maquinasNormalizadas.length > 0) {
       const valuesPlaceholders = maquinasNormalizadas
@@ -522,6 +521,7 @@ export async function actualizarTuboService({
     num_por_paq,
     alto_paq,
     ancho_paq,
+    paquetes,
   },
 }) {
   try {
@@ -540,7 +540,7 @@ export async function actualizarTuboService({
 
     const updateQuery = `
       UPDATE Tubos
-      SET calidad_id = ?, tipo_id = ?, fleje_id = ?, medida = ?, art_concepto = ?, activo = ?, ancho = ?, alto = ?, longitud = ?, diametro = ?, espesor = ?, peso_unitario = ?, peso_total = ?, unidades = ?, num_por_paq = ?, alto_paq = ?, ancho_paq = ?
+      SET calidad_id = ?, tipo_id = ?, fleje_id = ?, medida = ?, art_concepto = ?, activo = ?, ancho = ?, alto = ?, longitud = ?, diametro = ?, espesor = ?, peso_unitario = ?, peso_total = ?, num_paquetes = ?, unidades = ?, num_por_paq = ?, alto_paq = ?, ancho_paq = ?
       WHERE id = ?
     `;
     await conn.query(updateQuery, [
@@ -558,6 +558,7 @@ export async function actualizarTuboService({
       Number.isFinite(Number(espesor)) ? Number(espesor) : 0,
       Number.isFinite(Number(peso_unitario)) ? Number(peso_unitario) : 0,
       Number.isFinite(Number(peso_total)) ? Number(peso_total) : 0,
+      Number.isFinite(Number(paquetes)) ? Number(paquetes) : 0,
       Number.isFinite(Number(unidades)) ? Number(unidades) : 0,
       Number.isFinite(Number(num_por_paq)) ? Number(num_por_paq) : 0,
       Number.isFinite(Number(alto_paq)) ? Number(alto_paq) : 0,
@@ -603,6 +604,7 @@ export async function actualizarTuboService({
       num_por_paq: Number(num_por_paq),
       alto_paq: Number(alto_paq),
       ancho_paq: Number(ancho_paq),
+      paquetes: Number(paquetes),
       creado: new Date(),
     };
   } catch (error) {

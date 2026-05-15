@@ -101,7 +101,7 @@ const getColumns = (
         justifyContent="center"
       >
         <Typography variant="body2" fontWeight={500}>
-          {params?.row?.ancho_estipulado || '-'}
+          {params?.row?.ancho_estipulado || '0'}
         </Typography>
       </Stack>
     ),
@@ -120,7 +120,7 @@ const getColumns = (
         justifyContent="center"
       >
         <Typography variant="body2" fontWeight={500}>
-          {params?.row?.cantidad_flejes_cortes || '-'}
+          {params?.row?.cantidad_flejes_cortes || '0'}
         </Typography>
       </Stack>
     ),

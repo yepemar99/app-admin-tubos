@@ -149,6 +149,8 @@ const Tubos = () => {
     },
   ];
 
+  console.log('tubos', tubos);
+
   return (
     <Box sx={{ width: '100%' }}>
       <Modal

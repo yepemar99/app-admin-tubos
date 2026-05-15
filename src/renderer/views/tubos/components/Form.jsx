@@ -138,7 +138,7 @@ const TuboForm = ({ data = null, handleConfirm, handleCancel }) => {
       peso_unitario: data?.peso_unitario || 0,
       peso_total: data?.peso_total || 0,
       num_por_paq: data?.num_por_paq || 1,
-      paquetes: data?.paquetes || 0,
+      paquetes: data?.num_paquetes || 0,
       unidades: data?.unidades || 0,
       alto_paq: data?.alto_paq || 0,
       ancho_paq: data?.ancho_paq || 0,

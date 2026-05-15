@@ -31,6 +31,9 @@ const schema = z.object({
   maquina_id: z
     .number({ invalid_type_error: 'Seleccione una máquina' })
     .positive('Seleccione una máquina'),
+  calidad_id: z
+    .number({ invalid_type_error: 'Seleccione una calidad' })
+    .positive('Seleccione una calidad'),
   tubo_id: z
     .number({ invalid_type_error: 'Seleccione un tubo' })
     .positive('Seleccione un tubo'),
@@ -48,7 +51,8 @@ const schema = z.object({
 });
 
 const ProdTubosForm = ({ data = null, handleConfirm, handleCancel }) => {
-  const { operarios, maquinas, tiposTubos, turnos } = useContext(DataContext);
+  const { operarios, maquinas, tiposCalidad, tiposTubos, turnos } =
+    useContext(DataContext);
   const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
   const [pendingFormData, setPendingFormData] = useState(null);
   const [tubosFiltrados, setTubosFiltrados] = useState([]);
@@ -60,6 +64,7 @@ const ProdTubosForm = ({ data = null, handleConfirm, handleCancel }) => {
       operario_id: data?.operario_id || '',
       turno_id: data?.turno_id || '',
       maquina_id: data?.maquina_id || '',
+      calidad_id: data?.calidad_id || '',
       tubo_id: data?.tubo_id || '',
       cant_tubos_buenos: data?.cant_tubos_buenos || 0,
       cant_tubos_malos: data?.cant_tubos_malos || 0,
@@ -73,11 +78,13 @@ const ProdTubosForm = ({ data = null, handleConfirm, handleCancel }) => {
 
   const { handleSubmit, watch, setValue } = methods;
   const watchMaquinaId = watch('maquina_id');
+  const watchCalidadId = watch('calidad_id');
 
-  const loadTubos = async (maquinaId) => {
+  const loadTubos = async (maquinaId, calidadId) => {
     try {
       const result = await window.api.tubos.getAllForSelects({
         maquina_id: maquinaId,
+        calidad_id: calidadId,
       });
       if (result.success) {
         setTubosFiltrados(result.data);
@@ -90,8 +97,17 @@ const ProdTubosForm = ({ data = null, handleConfirm, handleCancel }) => {
   };
 
   useEffect(() => {
-    if (watchMaquinaId && Number(watchMaquinaId) > 0) loadTubos(watchMaquinaId);
-  }, [watchMaquinaId, tiposTubos]);
+    const maquinaId = Number(watchMaquinaId);
+    const calidadId = Number(watchCalidadId);
+
+    if (maquinaId > 0 && calidadId > 0) {
+      loadTubos(maquinaId, calidadId);
+      return;
+    }
+
+    setTubosFiltrados([]);
+    setValue('tubo_id', '');
+  }, [watchMaquinaId, watchCalidadId, tiposTubos, setValue]);
 
   const getInitialFecha = () => {
     if (!data?.creado) return null;
@@ -102,7 +118,6 @@ const ProdTubosForm = ({ data = null, handleConfirm, handleCancel }) => {
   const buildSubmitPayload = (formData) => {
     const initialFecha = getInitialFecha();
     const fecha = initialFecha === formData.fecha ? null : formData.fecha;
-
     return {
       ...formData,
       creado: fecha,
@@ -233,17 +248,33 @@ const ProdTubosForm = ({ data = null, handleConfirm, handleCancel }) => {
           </Stack>
 
           <Grid container spacing={2}>
-            <Grid size={{ xs: 12, sm: 4 }}>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <Select
+                size="small"
+                name="calidad_id"
+                label="Calidad"
+                options={tiposCalidad.map((calidad) => ({
+                  label: calidad.nombre,
+                  value: calidad.id,
+                }))}
+                fullWidth
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <Select
                 size="small"
                 name="tubo_id"
-                label="Tipo de Tubo"
+                label="Tubo"
                 options={tubosFiltrados.map((t) => ({
                   label: t.art_concepto || t.concepto || `Tubo ${t.id}`,
                   value: t.id,
                 }))}
                 fullWidth
-                disabled={tubosFiltrados.length === 0}
+                disabled={
+                  !watchMaquinaId ||
+                  !watchCalidadId ||
+                  tubosFiltrados.length === 0
+                }
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 4 }}>
@@ -265,7 +296,7 @@ const ProdTubosForm = ({ data = null, handleConfirm, handleCancel }) => {
               />
             </Grid>
 
-            <Grid size={{ xs: 12, sm: 6 }}>
+            <Grid size={{ xs: 12, sm: 4 }}>
               <TextField
                 size="small"
                 name="concentracion_taladrina"
@@ -274,7 +305,8 @@ const ProdTubosForm = ({ data = null, handleConfirm, handleCancel }) => {
                 fullWidth
               />
             </Grid>
-            <Grid size={{ xs: 12, sm: 6 }} />
+            <Grid size={{ xs: 12, sm: 4 }} />
+            <Grid size={{ xs: 12, sm: 4 }} />
 
             <Grid size={{ xs: 12 }}>
               <TextField
