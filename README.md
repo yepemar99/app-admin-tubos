@@ -1,20 +1,22 @@
-```markdown
 # 🚀 app-admin-tubos
 
 <div align="center">
 
 ![Electron](https://img.shields.io/badge/Electron-19.1.9-blue.svg?style=for-the-badge&logo=Electron)
+
 ![React](https://img.shields.io/badge/React-18.2.0-61DAFB?style=for-the-badge&logo=react&logoColor=white)
+
 ![TypeScript](https://img.shields.io/badge/TypeScript-4.9.5-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
+
 [![GitHub stars](https://img.shields.io/github/stars/yepemar99/app-admin-tubos?style=for-the-badge)](https://github.com/yepemar99/app-admin-tubos/stargazers)
+
 [![GitHub forks](https://img.shields.io/github/forks/yepemar99/app-admin-tubos?style=for-the-badge)](https://github.com/yepemar99/app-admin-tubos/network)
+
 [![GitHub issues](https://img.shields.io/github/issues/yepemar99/app-admin-tubos?style=for-the-badge)](https://github.com/yepemar99/app-admin-tubos/issues)
+
 [![GitHub license](https://img.shields.io/github/license/yepemar99/app-admin-tubos?style=for-the-badge)](LICENSE)
 
 **A cross-platform desktop administration application for managing "tubos" (pipes/tubes) data, built with Electron and React.**
-
-[Live Demo](https://demo-link.com) <!-- TODO: Add live demo link if available --> |
-[Documentation](https://docs-link.com) <!-- TODO: Add documentation link if available -->
 
 </div>
 
@@ -30,11 +32,6 @@
 -   ⚙️ **Configurable Settings:** Easily customize core application parameters such as API base URL and app title via a dedicated `settings.json` file.
 -   📦 **Cross-Platform Compatibility:** Packaged using Electron Forge, ensuring distributable builds for Windows, macOS, and Linux.
 -   🧹 **Code Quality & Consistency:** Maintained with ESLint for linting and Prettier for consistent code formatting.
-
-## 🖥️ Screenshots
-
-![Application Screenshot 1](path-to-screenshot-1.png) <!-- TODO: Add actual screenshots of the application -->
-![Application Screenshot 2](path-to-screenshot-2.png) <!-- TODO: Add more screenshots, possibly showing different modules -->
 
 ## 🛠️ Tech Stack
 
@@ -128,9 +125,13 @@ app-admin-tubos/
 The `settings.json` file in the root directory allows you to configure essential application parameters.
 
 | Variable       | Description                       | Default                 | Required |
+
 |----------------|-----------------------------------|-------------------------|----------|
+
 | `apiBaseUrl`   | The base URL for the backend API. | `http://localhost:3000/api` | Yes      |
+
 | `appTitle`     | The title displayed in the application window. | `Admin Tubos Desktop App` | Yes      |
+
 | `defaultTheme` | The default visual theme for the application. | `light`                 | No       |
 
 ### Environment Variables
@@ -145,10 +146,15 @@ The project uses `dotenv` to manage environment variables. While no `.env.exampl
 In the project directory, you can run:
 
 | Command        | Description                                       |
+
 |----------------|---------------------------------------------------|
+
 | `npm run start`| Starts the Electron application in development mode. |
+
 | `npm run lint` | Runs ESLint to check for code quality and style issues. |
+
 | `npm run package` | Packages the Electron application into an OS-specific distributable (e.g., `.app`, `.exe`). |
+
 | `npm run make` | Creates installers for the packaged Electron application. |
 
 ### Development Workflow
@@ -230,3 +236,4 @@ Made with ❤️ by [yepemar99]
 
 </div>
 ```
+
