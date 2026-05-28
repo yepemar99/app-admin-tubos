@@ -30,6 +30,7 @@ export async function listarTodosTiposCalidadService() {
         label_bobina: row.label_bobina,
         label_fleje: row.label_fleje,
         label_tubo: row.label_tubo,
+        mostrar_tubos: row.mostrar_tubos,
         creado: row.creado,
       })),
       total,

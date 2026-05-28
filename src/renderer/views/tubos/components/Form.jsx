@@ -398,10 +398,12 @@ const TuboForm = ({ data = null, handleConfirm, handleCancel }) => {
                   size="small"
                   name="calidad_id"
                   label="Calidad"
-                  options={tiposCalidad.map((c) => ({
-                    value: c.id,
-                    label: c.nombre,
-                  }))}
+                  options={tiposCalidad
+                    .filter((c) => c.mostrar_tubos)
+                    .map((c) => ({
+                      value: c.id,
+                      label: c.nombre,
+                    }))}
                   sx={{ width: 200 }}
                 />
                 <Select

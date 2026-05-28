@@ -255,10 +255,12 @@ const SalidaTuboForm = ({ data, handleConfirm, handleCancel }) => {
                     name="calidad_id"
                     label="Seleccione Calidad"
                     options={
-                      tiposCalidad?.map((c) => ({
-                        value: c.id,
-                        label: c.nombre,
-                      })) || []
+                      tiposCalidad
+                        ?.filter((c) => c.mostrar_tubos)
+                        .map((c) => ({
+                          value: c.id,
+                          label: c.nombre,
+                        })) || []
                     }
                     onChange={(val) => {
                       setValue('calidad_id', val);

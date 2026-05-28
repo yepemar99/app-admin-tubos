@@ -51,10 +51,12 @@ const ProdTubos = () => {
   const loadFilters = async () => {
     return {
       calidad:
-        tiposCalidad?.map((calidad) => ({
-          value: calidad.id,
-          label: calidad.nombre,
-        })) || [],
+        tiposCalidad
+          ?.filter((c) => c.mostrar_tubos)
+          .map((calidad) => ({
+            value: calidad.id,
+            label: calidad.nombre,
+          })) || [],
       operario:
         operarios?.map((o) => ({
           value: o.id,

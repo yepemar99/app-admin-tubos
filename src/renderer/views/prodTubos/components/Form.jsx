@@ -253,10 +253,14 @@ const ProdTubosForm = ({ data = null, handleConfirm, handleCancel }) => {
                 size="small"
                 name="calidad_id"
                 label="Calidad"
-                options={tiposCalidad.map((calidad) => ({
-                  label: calidad.nombre,
-                  value: calidad.id,
-                }))}
+                options={
+                  tiposCalidad
+                    ?.filter((c) => c.mostrar_tubos)
+                    .map((calidad) => ({
+                      label: calidad.nombre,
+                      value: calidad.id,
+                    })) || []
+                }
                 fullWidth
               />
             </Grid>
